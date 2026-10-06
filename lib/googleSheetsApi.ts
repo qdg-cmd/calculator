@@ -1,46 +1,44 @@
-// 클라이언트 측 통신 모듈 (React Query, SWR 등과 연계하여 사용)
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Transaction, Account, CategoryItem, AssetValuation, Recurring, Budget } from '../types/finance';
+
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || 'https://script.google.com/macros/s/AKfycbwDFcd00SMa27jSn6ZpluqSZY4YxR2c0WCjYAioo3jq_NPLuliZLzy-CJI8_YdiScob7w/exec';
 
 export type CrudAction = 'READ' | 'CREATE' | 'UPDATE' | 'DELETE';
 
-/**
- * 특정 시트의 데이터를 조회합니다.
- */
 export async function fetchSheetData<T>(sheetName: string): Promise<T[]> {
-  const response = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'READ', sheetName })
-  });
-  
-  const result = await response.json();
-  if (!result.success) throw new Error(result.error);
-  return result.data as T[];
+  try {
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'READ', sheetName })
+    });
+    
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+    return result.data as T[];
+  } catch (error) {
+    console.error(`Fetch Error on ${sheetName}:`, error);
+    return []; // 실패 시 빈 배열 반환하여 앱 크래시 방지
+  }
 }
 
-/**
- * 특정 시트에 데이터를 추가/수정/삭제합니다.
- */
 export async function mutateSheetData<T>(
   sheetName: string, 
   action: Exclude<CrudAction, 'READ'>, 
-  data: Partial<T>
-): Promise<T> {
+  data: Partial<T> | Partial<T>[]
+): Promise<T | T[]> {
   const response = await fetch(GAS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action, sheetName, data })
   });
 
   const result = await response.json();
   if (!result.success) throw new Error(result.error);
-  return result.data as T;
+  return result.data;
 }
 
-/* 
-// React Query를 활용한 커스텀 훅 예시 (옵션)
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Transaction } from '../types/finance';
+// === React Query Hooks ===
 
 export function useTransactions() {
   return useQuery({
@@ -49,14 +47,55 @@ export function useTransactions() {
   });
 }
 
-export function useAddTransaction() {
+export function useAccounts() {
+  return useQuery({
+    queryKey: ['Accounts'],
+    queryFn: () => fetchSheetData<Account>('Accounts')
+  });
+}
+
+export function useCategories() {
+  return useQuery({
+    queryKey: ['Categories'],
+    queryFn: () => fetchSheetData<CategoryItem>('Categories')
+  });
+}
+
+export function useAssetValuations() {
+  return useQuery({
+    queryKey: ['AssetValuations'],
+    queryFn: () => fetchSheetData<AssetValuation>('AssetValuations')
+  });
+}
+
+export function useMutateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (newTx: Partial<Transaction>) => mutateSheetData<Transaction>('Transactions', 'CREATE', newTx),
+    mutationFn: ({ action, data }: { action: 'CREATE'|'UPDATE'|'DELETE', data: Partial<Transaction> }) => 
+      mutateSheetData<Transaction>('Transactions', action, data),
     onSuccess: () => {
-      // 낙관적 업데이트(Optimistic Update) 또는 무효화(Invalidate)를 통해 UI 즉시 갱신
       queryClient.invalidateQueries({ queryKey: ['Transactions'] });
     }
   });
 }
-*/
+
+export function useMutateTransactionsBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Transaction>[]) => mutateSheetData<Transaction>('Transactions', 'CREATE', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Transactions'] });
+    }
+  });
+}
+
+export function useMutateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, data }: { action: 'CREATE'|'UPDATE'|'DELETE', data: Partial<CategoryItem> }) => 
+      mutateSheetData<CategoryItem>('Categories', action, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Categories'] });
+    }
+  });
+}

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useDateStore } from '@/store/useDateStore';
-import { format } from 'date-fns';
-import { Search, Plus, Filter, Trash2, Edit } from 'lucide-react';
+import { useTransactions } from '@/lib/googleSheetsApi';
+import { format, parseISO, isWithinInterval } from 'date-fns';
+import { Search, Plus } from 'lucide-react';
 
 export default function TransactionsPage() {
   const { getPeriod } = useDateStore();
@@ -12,6 +13,22 @@ export default function TransactionsPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [mainFilter, setMainFilter] = useState('전체');
+
+  const { data: transactions = [], isLoading } = useTransactions();
+
+  // 날짜, 검색어, 대분류 필터링
+  const filtered = transactions.filter(tx => {
+    try {
+      const d = typeof tx.date === 'string' ? parseISO(tx.date) : new Date(tx.date);
+      if (!isWithinInterval(d, { start: period.start, end: period.end })) return false;
+      if (mainFilter !== '전체' && tx.mainCategory !== mainFilter) return false;
+      if (searchTerm) {
+        const keyword = searchTerm.toLowerCase();
+        if (!tx.merchant?.toLowerCase().includes(keyword) && !tx.memo?.toLowerCase().includes(keyword)) return false;
+      }
+      return true;
+    } catch { return false; }
+  });
 
   return (
     <div className="space-y-6">
@@ -22,11 +39,9 @@ export default function TransactionsPage() {
             {format(period.start, 'yyyy.MM.dd')} ~ {format(period.end, 'yyyy.MM.dd')}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-            <Plus size={16} /> 신규 등록
-          </button>
-        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+          <Plus size={16} /> 신규 등록
+        </button>
       </div>
 
       <Card>
@@ -64,31 +79,33 @@ export default function TransactionsPage() {
                   <th className="px-6 py-3">일시</th>
                   <th className="px-6 py-3">분류</th>
                   <th className="px-6 py-3">가맹점 / 메모</th>
-                  <th className="px-6 py-3">계좌</th>
                   <th className="px-6 py-3 text-right">금액</th>
-                  <th className="px-6 py-3 text-center">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y text-slate-700">
-                {/* 뼈대 데이터 렌더링 예시 */}
-                <tr className="hover:bg-slate-50">
-                  <td className="px-6 py-4">2026.10.17 14:30</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium">지출 &gt; 식비</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-slate-900">스타벅스 강남점</div>
-                    <div className="text-xs text-slate-500">점심 커피</div>
-                  </td>
-                  <td className="px-6 py-4">토스뱅크</td>
-                  <td className="px-6 py-4 text-right font-semibold text-slate-900">-4,500원</td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2">
-                      <button className="text-slate-400 hover:text-blue-600"><Edit size={16} /></button>
-                      <button className="text-slate-400 hover:text-red-600"><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
+                {isLoading ? (
+                  <tr><td colSpan={4} className="p-10 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={4} className="p-10 text-center text-slate-500">해당 기간에 거래 내역이 없습니다.</td></tr>
+                ) : (
+                  filtered.map((tx, idx) => (
+                    <tr key={tx.id || idx} className="hover:bg-slate-50">
+                      <td className="px-6 py-4">{format(new Date(tx.date), 'MM.dd HH:mm')}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${tx.type === 'expense' ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                          {tx.mainCategory} &gt; {tx.subCategory}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">{tx.merchant}</div>
+                        <div className="text-xs text-slate-500">{tx.memo}</div>
+                      </td>
+                      <td className={`px-6 py-4 text-right font-semibold ${tx.type === 'expense' ? 'text-red-500' : 'text-blue-600'}`}>
+                        {tx.type === 'expense' ? '-' : '+'}{Number(tx.amount).toLocaleString()}원
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
