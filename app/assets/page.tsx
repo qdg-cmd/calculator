@@ -18,19 +18,70 @@ export default function Assets() {
   
   // Date Range Filtering
   const { startDate, endDate } = getDateRange(selectedDate, baseDay, periodType);
-
-  const chartDataMap: Record<string, any> = {};
-  vals.forEach(v => {
-    if (!v.date) return;
-    const d = parseISO(v.date);
-    if (d >= startDate && d <= endDate) {
-      const dateStr = v.date.split('T')[0];
-      if (!chartDataMap[dateStr]) chartDataMap[dateStr] = { date: dateStr };
-      chartDataMap[dateStr][v.assetId] = Number(v.valuation);
-    }
-  });
+  const txs = data?.Transactions || [];
   
-  const chartData = Object.values(chartDataMap).sort((a: any, b: any) => a.date.localeCompare(b.date));
+  // 1. 역추적을 위한 현재 잔액 복사
+  const currentBalances: Record<string, number> = {};
+  accounts.forEach(a => currentBalances[a.id] = Number(a.balance));
+
+  // 2. 미래부터 과거순으로 거래내역 정렬하여 일자별 잔액 역산
+  const sortedTxs = [...txs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  const dailyBalances: Record<string, Record<string, number>> = {}; // { '2026-10-01': { A001: 5000, TOTAL: ... } }
+  
+  // 기준점은 오늘 날짜
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  
+  // 만약 AssetValuations(vals) 데이터가 있다면 그걸 우선 사용, 없으면 Transactions 기반으로 자동 생성
+  const hasValuations = vals.length > 0;
+  const chartDataMap: Record<string, any> = {};
+
+  if (hasValuations) {
+    vals.forEach(v => {
+      if (!v.date) return;
+      const d = parseISO(v.date);
+      if (d >= startDate && d <= endDate) {
+        const dateStr = v.date.split('T')[0];
+        if (!chartDataMap[dateStr]) chartDataMap[dateStr] = { date: dateStr };
+        chartDataMap[dateStr][v.assetId] = Number(v.valuation);
+      }
+    });
+  } else {
+    // 자동 역산 (오늘부터 startDate까지)
+    let curD = new Date(endDate > new Date() ? endDate : new Date());
+    let activeBalances = { ...currentBalances };
+    
+    // 현재 잔액에서 출발하여 과거로 가며 거래내역을 반대로 적용 (지출은 더하고, 수입은 뺌)
+    while (curD >= startDate) {
+      const dateStr = format(curD, 'yyyy-MM-dd');
+      
+      // 이 날짜의 거래내역 찾기 (이 날짜에 일어난 거래는 그날 시작 잔액에서 '발생'한 것이므로, 이전 날짜 잔액을 구하려면 거래를 취소해야 함)
+      // 정확히는, curD의 자정 잔액을 구하는 중... 복잡함을 피해 단순 합산
+      const dayTxs = sortedTxs.filter(t => t.date && t.date.startsWith(dateStr));
+      
+      // 현재 activeBalances 저장
+      chartDataMap[dateStr] = { date: dateStr };
+      let dayTotal = 0;
+      accounts.forEach(a => {
+        chartDataMap[dateStr][a.id] = activeBalances[a.id] || 0;
+        dayTotal += (activeBalances[a.id] || 0);
+      });
+      chartDataMap[dateStr]['TOTAL'] = dayTotal;
+      
+      // 거래내역 취소(과거로 가기 위해 지출은 잔액에 + 복구, 수입은 잔액에서 - 차감)
+      dayTxs.forEach(t => {
+        if (t.mainCategory === '지출') activeBalances[t.fromAccountId] += Number(t.amount);
+        if (t.mainCategory === '수입') activeBalances[t.fromAccountId] -= Number(t.amount);
+        // 저축/투자 등 이동은 생략
+      });
+
+      curD.setDate(curD.getDate() - 1);
+    }
+  }
+  
+  const chartData = Object.values(chartDataMap)
+    .filter((d: any) => parseISO(d.date) >= startDate && parseISO(d.date) <= endDate)
+    .sort((a: any, b: any) => a.date.localeCompare(b.date));
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">

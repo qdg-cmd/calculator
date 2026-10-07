@@ -1,9 +1,10 @@
 import { Sidebar } from '@/components/Sidebar';
 import Providers from './providers';
 import './globals.css';
+import { GlobalFab } from '@/components/GlobalFab';
 
 export const metadata = {
-  title: '개인 자산 관리 (PFM)',
+  title: '개인 자산 관리(PFM)',
   description: 'Google Sheets 기반 개인 자산 관리 대시보드',
 };
 
@@ -22,6 +23,7 @@ export default function RootLayout({
               {children}
             </div>
           </main>
+          <GlobalFab />
         </Providers>
       </body>
     </html>
