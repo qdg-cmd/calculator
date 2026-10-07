@@ -58,7 +58,7 @@ export function useOptimisticMutation<T extends { id: string }>(sheetName: keyof
       if (previousData) {
         queryClient.setQueryData<AppData>(['appData'], (old) => {
           if (!old) return old;
-          const list = [...old[sheetName]] as T[];
+          const list = [...(old[sheetName] as any[])] as T[];
           
           if (action === 'CREATE') {
             return { ...old, [sheetName]: [...list, data as T] };

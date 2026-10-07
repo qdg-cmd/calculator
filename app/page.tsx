@@ -111,7 +111,7 @@ export default function Dashboard() {
                     return acc;
                   }, {} as Record<string, number>)).map(([name, value]) => ({name, value}))}
                   dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8"
-                  label={({name, percent}) => name + ' (' + (percent * 100).toFixed(0) + '%)'}
+                  label={({name, percent}) => name + ' (' + ((percent || 0) * 100).toFixed(0) + '%)'}
                 >
                   {
                     Object.entries({}).map((_, index) => (
@@ -119,7 +119,7 @@ export default function Dashboard() {
                     ))
                   }
                 </Pie>
-                <Tooltip formatter={(val: number) => val.toLocaleString() + '원'} />
+                <Tooltip formatter={(val: any) => Number(val || 0).toLocaleString() + '원'} />
               </PieChart>
             </ResponsiveContainer>
           </div>
