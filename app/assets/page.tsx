@@ -27,7 +27,7 @@ export default function Assets() {
 
   if (isLoading) return <div className="p-8">로딩 중...</div>;
   const vals = data?.AssetValuations || [];
-  const accounts = data?.Accounts || [];
+  const accounts = (data?.Accounts || []).filter(a => a && a.id && String(a.id).trim() !== '' && a.name);
 
   const totalBalance = accounts.reduce((a,b) => a + Number(b.balance), 0);
   

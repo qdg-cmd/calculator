@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useAppData, useOptimisticMutation } from '@/lib/googleSheetsApi';
 import { useDateStore, getDateRange } from '@/store/useDateStore';
 import { parseISO, format } from 'date-fns';
@@ -9,19 +10,50 @@ export default function Budgets() {
   const mutate = useOptimisticMutation<Budget>('Budgets');
   const { baseDay, periodType, selectedDate } = useDateStore();
   
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editBudget, setEditBudget] = useState<any>(null);
+  const [catId, setCatId] = useState('');
+  const [yearMonth, setYearMonth] = useState('');
+  const [targetAmount, setTargetAmount] = useState('');
+
   if (isLoading) return <div className="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</div>;
 
   const { startDate, endDate } = getDateRange(selectedDate, baseDay, periodType);
   const currentMonthStr = format(new Date(selectedDate), 'yyyy-MM');
   const currentMonthNumStr = format(new Date(selectedDate), 'yyyy.MM');
   
-  const handleAddBudget = () => {
-    const catId = prompt('카테고리 ID를 입력하세요 (예: cat_ex_1):');
-    if(!catId) return;
-    const yearMonth = prompt('대상 연월을 입력하세요 (예: 2026-10):', currentMonthStr);
-    const targetAmount = prompt('목표 예산 금액을 입력하세요:', '500000');
-    // 임시 ID(b.id)를 추가하여 삭제할 수 있도록 함
-    mutate.mutate({ action: 'CREATE', data: { id: 'B'+Date.now(), categoryId: catId, yearMonth: yearMonth || currentMonthStr, targetAmount: Number(targetAmount) || 0, warningThreshold: 80 } as any });
+  const handleOpenModal = (budget?: any) => {
+    if (budget) {
+      setEditBudget(budget);
+      setCatId(budget.categoryId);
+      setYearMonth(budget.yearMonth);
+      setTargetAmount(String(budget.targetAmount));
+    } else {
+      setEditBudget(null);
+      setCatId('');
+      setYearMonth(currentMonthStr);
+      setTargetAmount('');
+    }
+    setModalOpen(true);
+  };
+
+  const handleSaveBudget = () => {
+    if (!catId) return alert('카테고리를 선택해주세요.');
+    if (!yearMonth) return alert('대상 연월을 입력해주세요.');
+    if (!targetAmount) return alert('목표 예산 금액을 입력해주세요.');
+    
+    if (editBudget) {
+      mutate.mutate({ 
+        action: 'UPDATE', 
+        data: { ...editBudget, categoryId: catId, yearMonth, targetAmount: Number(targetAmount) }
+      });
+    } else {
+      mutate.mutate({ 
+        action: 'CREATE', 
+        data: { id: 'B'+Date.now(), categoryId: catId, yearMonth, targetAmount: Number(targetAmount), warningThreshold: 80 } as any 
+      });
+    }
+    setModalOpen(false);
   };
 
   const handleDeleteBudget = (id: string) => {
@@ -37,6 +69,7 @@ export default function Budgets() {
   
   const txs = data?.Transactions || [];
   const recurrings = data?.Recurring || [];
+  const categories = data?.Categories || [];
 
   const monthlyTxs = txs.filter(tx => {
     if (!tx.date) return false;
@@ -77,7 +110,7 @@ export default function Budgets() {
       <section>
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold">이번 달 예산 진행률</h2>
-          <button onClick={handleAddBudget} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 예산 추가</button>
+          <button onClick={() => handleOpenModal()} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 예산 추가</button>
         </div>
         {budgets.length === 0 ? (
           <div className="bg-white p-8 rounded-xl border text-center text-slate-500">
@@ -86,13 +119,12 @@ export default function Budgets() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {budgets.map(b => {
-              const cat = data?.Categories?.find(c => c.id === b.categoryId);
+              const cat = categories.find(c => c.id === b.categoryId);
               const spent = monthlyTxs.filter(t => t.subCategory === (cat?.subCategory || b.categoryId)).reduce((a,tx) => a+Number(tx.amount), 0);
               const target = Number(b.targetAmount);
               const ratio = target > 0 ? (spent / target) * 100 : 0;
               const warningThreshold = Number(b.warningThreshold || 80);
               const isWarning = ratio >= warningThreshold;
-              // b as any allows us to read b.id if it exists
               const bId = (b as any).id || b.categoryId;
               
               return (
@@ -100,9 +132,10 @@ export default function Budgets() {
                   <div className="flex justify-between items-end mb-3">
                     <div>
                       <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mt-1">
                         <h3 className="font-bold text-lg">{cat?.subCategory || b.categoryId}</h3>
-                        <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600">삭제</button>
+                        <button onClick={() => handleOpenModal(b)} className="text-blue-400 text-xs hover:text-blue-600 border border-blue-200 px-2 py-0.5 rounded">수정</button>
+                        <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600 border border-red-200 px-2 py-0.5 rounded">삭제</button>
                       </div>
                     </div>
                     <div className="text-right">
@@ -119,9 +152,7 @@ export default function Budgets() {
                   </div>
                   
                   <div className="flex justify-between items-center mt-3">
-                    <p className="text-xs text-slate-500">
-                      권장 임계값: {warningThreshold}%
-                    </p>
+                    <p className="text-xs text-slate-500">권장 임계값: {warningThreshold}%</p>
                     <p className={`text-sm font-bold ${isWarning ? 'text-red-600' : 'text-blue-600'}`}>
                       {ratio.toFixed(1)}% 사용 {isWarning && ratio < 100 && '⚠️ 위험'} {ratio >= 100 && '🚨 초과'}
                     </p>
@@ -132,6 +163,55 @@ export default function Budgets() {
           </div>
         )}
       </section>
+
+      {/* Budget Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-lg">{editBudget ? '예산 수정' : '새 예산 추가'}</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+            <div className="p-5 space-y-4 flex-1 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">예산 대상 카테고리</label>
+                <select 
+                  className="w-full border rounded-lg p-2 bg-slate-50"
+                  value={catId} 
+                  onChange={(e) => setCatId(e.target.value)}
+                >
+                  <option value="">-- 카테고리 선택 --</option>
+                  {categories.filter(c => c.mainCategory === '지출').map(c => (
+                    <option key={c.id} value={c.id}>{c.mainCategory} &gt; {c.subCategory}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">대상 연월 (YYYY-MM)</label>
+                <input 
+                  type="text" 
+                  className="w-full border rounded-lg p-2 bg-slate-50" 
+                  value={yearMonth} 
+                  onChange={(e) => setYearMonth(e.target.value)} 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">목표 예산 금액</label>
+                <input 
+                  type="number" 
+                  className="w-full border rounded-lg p-2 bg-slate-50 font-bold text-blue-600" 
+                  value={targetAmount} 
+                  onChange={(e) => setTargetAmount(e.target.value)} 
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+              <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors">취소</button>
+              <button onClick={handleSaveBudget} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold shadow-sm hover:bg-slate-700 transition-colors">저장하기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
