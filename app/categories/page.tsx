@@ -3,22 +3,23 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { useCategories } from '@/lib/googleSheetsApi';
+import { useAppData } from '@/lib/googleSheetsApi';
 
 const TABS = ['지출', '수입', '저축', '투자'];
 
 export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState('지출');
-  const { data: categories = [], isLoading } = useCategories();
+  const { data, isLoading } = useAppData();
+  const categories = data?.Categories || [];
 
   const currentSubCats = categories.filter(c => c.mainCategory === activeTab);
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">카테고리 관리</h1>
-          <p className="text-sm text-slate-500 mt-1">대분류별 소분류 항목을 추가하고 편집하세요.</p>
+          <p className="text-sm text-slate-500 mt-1">대분류 및 소분류를 추가하고 편집하세요.</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
           <Plus size={16} /> 소분류 추가

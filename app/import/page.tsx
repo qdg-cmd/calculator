@@ -4,14 +4,14 @@ import { useState } from 'react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { UploadCloud, CheckCircle2, ArrowRight } from 'lucide-react';
-import { useMutateTransactionsBatch } from '@/lib/googleSheetsApi';
+import { UploadCloud, CheckCircle2, ArrowRight, Info } from 'lucide-react';
+import { useOptimisticMutation } from '@/lib/googleSheetsApi';
 import { Transaction } from '@/types/finance';
 
 export default function ImportWizardPage() {
   const [step, setStep] = useState(1);
   const [parsedData, setParsedData] = useState<any[]>([]);
-  const mutateBatch = useMutateTransactionsBatch();
+  const mutateBatch = useOptimisticMutation<Transaction>('Transactions');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,7 +22,7 @@ export default function ImportWizardPage() {
         header: true,
         complete: (results) => {
           setParsedData(results.data);
-          setStep(3); // 매핑 생략하고 바로 검증으로 이동 (데모용)
+          setStep(3);
         }
       });
     } else {
@@ -41,28 +41,41 @@ export default function ImportWizardPage() {
   };
 
   const handleSave = async () => {
-    // 임시 매핑 로직 (실제 필드에 맞게 가공 필요)
-    const formatted: Partial<Transaction>[] = parsedData.slice(0, 50).map((row: any) => ({
+    const formatted: any[] = parsedData.slice(0, 50).map((row: any) => ({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
-      amount: parseInt(row['금액'] || row['amount'] || 0, 10),
+      amount: parseInt(row['금액'] || row['amount'] || row['이용금액'] || 0, 10),
       type: 'expense',
-      merchant: row['가맹점'] || row['merchant'] || '알 수 없음',
+      fromAccountId: '',
+      toAccountId: '',
+      merchant: row['가맹점'] || row['merchant'] || row['이용가맹점명'] || '알 수 없음',
       mainCategory: '지출',
       subCategory: '미분류',
       memo: 'CSV Import',
       isRecurring: false
     }));
 
-    await mutateBatch.mutateAsync(formatted);
+    await mutateBatch.mutateAsync({ action: 'CREATE', data: formatted as any });
     setStep(4);
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 pb-24">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">데이터 수입(Import) 위저드</h1>
-        <p className="text-sm text-slate-500 mt-1">은행 및 카드사 명세서(CSV/Excel)를 안전하게 DB로 이관합니다.</p>
+        <h1 className="text-2xl font-bold text-slate-800">데이터 수입(Import) 마법사</h1>
+        <p className="text-sm text-slate-500 mt-1">은행/카드사 명세서(CSV/Excel)를 안전하게 DB로 넣습니다.</p>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg flex gap-3 text-sm text-blue-800 mb-6">
+        <Info className="flex-shrink-0" size={20} />
+        <div>
+          <p className="font-bold mb-1">업로드 전 엑셀/CSV 필수 확인 사항!</p>
+          <p>파일의 <strong>첫 번째 줄(헤더)</strong>에 반드시 아래의 이름이 포함되어 있어야 자동으로 인식됩니다.</p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li><strong>이용금액</strong> (또는 금액, amount): 결제 금액 숫자 (예: 15000)</li>
+            <li><strong>이용가맹점명</strong> (또는 가맹점, merchant): 결제처 이름 (예: 스타벅스)</li>
+          </ul>
+        </div>
       </div>
 
       <div className="flex items-center justify-between relative mb-8">
@@ -82,17 +95,19 @@ export default function ImportWizardPage() {
           <CardContent className="flex flex-col items-center justify-center py-20 relative">
             <input type="file" accept=".csv, .xlsx, .xls" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
             <UploadCloud size={32} className="text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700">CSV 또는 Excel 파일 클릭하여 업로드</h3>
-            <p className="text-sm text-slate-500 mt-2">PapaParse / SheetJS 기반 로컬 파싱 (서버 전송 없음)</p>
+            <h3 className="text-lg font-semibold text-slate-700">여기를 눌러 CSV 또는 Excel 파일 선택</h3>
+            <p className="text-sm text-slate-500 mt-2">브라우저 안에서만 처리되므로 안전합니다.</p>
           </CardContent>
         </Card>
       )}
 
       {step === 3 && (
         <Card>
-          <CardHeader><CardTitle>데이터 검증 ({parsedData.length}건)</CardTitle></CardHeader>
+          <CardHeader><CardTitle>데이터 확인 ({parsedData.length}건)</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-yellow-50 text-yellow-800 p-3 rounded-lg text-sm">기본 '미분류'로 구글 시트에 즉시 일괄 저장됩니다.</div>
+            <div className="bg-yellow-50 text-yellow-800 p-3 rounded-lg text-sm">
+              정상적으로 읽어들였습니다. 기본적으로 '미분류' 지출로 구글 시트에 즉시 일괄 등록됩니다.
+            </div>
             <div className="flex justify-end pt-4 border-t mt-6">
               <button onClick={handleSave} disabled={mutateBatch.isPending} className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg font-medium">
                 {mutateBatch.isPending ? '저장 중...' : '구글 시트에 일괄 저장'} <ArrowRight size={16} />
@@ -107,6 +122,7 @@ export default function ImportWizardPage() {
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
             <CheckCircle2 size={32} className="text-emerald-600 mb-4" />
             <h3 className="text-xl font-bold text-slate-800">수입 완료!</h3>
+            <p className="text-slate-500 mt-2">거래 내역 탭에서 방금 추가된 항목들을 확인하고 분류를 수정하세요.</p>
             <button onClick={() => setStep(1)} className="mt-8 px-6 py-2 border rounded-lg hover:bg-slate-50">새 파일 업로드</button>
           </CardContent>
         </Card>
