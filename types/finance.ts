@@ -34,6 +34,7 @@ export interface Transaction {
 }
 
 export interface Budget {
+  id: string;
   categoryId: string; // references CategoryItem.id
   yearMonth: string; // format: YYYY-MM
   targetAmount: number;

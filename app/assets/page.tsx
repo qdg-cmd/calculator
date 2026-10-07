@@ -1,14 +1,29 @@
 'use client';
 import { useState } from 'react';
-import { useAppData } from '@/lib/googleSheetsApi';
+import { useAppData, useOptimisticMutation } from '@/lib/googleSheetsApi';
 import { useDateStore, getDateRange } from '@/store/useDateStore';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { parseISO, format } from 'date-fns';
+import { Account } from '@/types/finance';
 
 export default function Assets() {
   const { data, isLoading } = useAppData();
+  const mutate = useOptimisticMutation<Account>('Accounts');
   const { baseDay, periodType, selectedDate } = useDateStore();
   const [selectedAssets, setSelectedAssets] = useState<string[]>(['TOTAL']);
+
+  const handleAdd = () => {
+    const name = prompt('계좌/자산명을 입력하세요:');
+    if(!name) return;
+    const institution = prompt('금융기관명을 입력하세요:');
+    const type = prompt('유형(현금/신용카드/투자/대출)을 입력하세요:', '현금');
+    const bal = prompt('초기 잔액을 입력하세요:', '0');
+    mutate.mutate({ action: 'CREATE', data: { id: 'A'+Date.now(), name, institution: institution || '', type: type as any, balance: Number(bal) || 0, currency: 'KRW' } });
+  };
+
+  const handleDelete = (id: string) => {
+    if(confirm('이 계좌를 삭제하시겠습니까?')) mutate.mutate({ action: 'DELETE', data: { id } });
+  };
 
   if (isLoading) return <div className="p-8">로딩 중...</div>;
   const vals = data?.AssetValuations || [];
@@ -32,51 +47,36 @@ export default function Assets() {
   // 기준점은 오늘 날짜
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
-  // 만약 AssetValuations(vals) 데이터가 있다면 그걸 우선 사용, 없으면 Transactions 기반으로 자동 생성
-  const hasValuations = vals.length > 0;
+  // 항상 Transactions 기반으로 자동 역산 (오늘부터 startDate까지)
   const chartDataMap: Record<string, any> = {};
-
-  if (hasValuations) {
-    vals.forEach(v => {
-      if (!v.date) return;
-      const d = parseISO(v.date);
-      if (d >= startDate && d <= endDate) {
-        const dateStr = v.date.split('T')[0];
-        if (!chartDataMap[dateStr]) chartDataMap[dateStr] = { date: dateStr };
-        chartDataMap[dateStr][v.assetId] = Number(v.valuation);
+  let curD = new Date(endDate > new Date() ? endDate : new Date());
+  let activeBalances = { ...currentBalances };
+  
+  // 현재 잔액에서 출발하여 과거로 가며 거래내역을 반대로 적용 (지출은 더하고, 수입은 뺌)
+  while (curD >= startDate) {
+    const dateStr = format(curD, 'yyyy-MM-dd');
+    
+    const dayTxs = sortedTxs.filter(t => t.date && t.date.startsWith(dateStr));
+    
+    chartDataMap[dateStr] = { date: dateStr };
+    let dayTotal = 0;
+    accounts.forEach(a => {
+      chartDataMap[dateStr][a.id] = activeBalances[a.id] || 0;
+      dayTotal += (activeBalances[a.id] || 0);
+    });
+    chartDataMap[dateStr]['TOTAL'] = dayTotal;
+    
+    dayTxs.forEach(t => {
+      if (t.mainCategory === '지출') activeBalances[t.fromAccountId] += Number(t.amount);
+      if (t.mainCategory === '수입') activeBalances[t.fromAccountId] -= Number(t.amount);
+      // 이체 로직: fromAccountId 에는 다시 더해주고, toAccountId 에서는 빼줌
+      if (t.mainCategory === '저축' || t.mainCategory === '투자') {
+        if (t.fromAccountId) activeBalances[t.fromAccountId] += Number(t.amount);
+        if (t.toAccountId) activeBalances[t.toAccountId] -= Number(t.amount);
       }
     });
-  } else {
-    // 자동 역산 (오늘부터 startDate까지)
-    let curD = new Date(endDate > new Date() ? endDate : new Date());
-    let activeBalances = { ...currentBalances };
-    
-    // 현재 잔액에서 출발하여 과거로 가며 거래내역을 반대로 적용 (지출은 더하고, 수입은 뺌)
-    while (curD >= startDate) {
-      const dateStr = format(curD, 'yyyy-MM-dd');
-      
-      // 이 날짜의 거래내역 찾기 (이 날짜에 일어난 거래는 그날 시작 잔액에서 '발생'한 것이므로, 이전 날짜 잔액을 구하려면 거래를 취소해야 함)
-      // 정확히는, curD의 자정 잔액을 구하는 중... 복잡함을 피해 단순 합산
-      const dayTxs = sortedTxs.filter(t => t.date && t.date.startsWith(dateStr));
-      
-      // 현재 activeBalances 저장
-      chartDataMap[dateStr] = { date: dateStr };
-      let dayTotal = 0;
-      accounts.forEach(a => {
-        chartDataMap[dateStr][a.id] = activeBalances[a.id] || 0;
-        dayTotal += (activeBalances[a.id] || 0);
-      });
-      chartDataMap[dateStr]['TOTAL'] = dayTotal;
-      
-      // 거래내역 취소(과거로 가기 위해 지출은 잔액에 + 복구, 수입은 잔액에서 - 차감)
-      dayTxs.forEach(t => {
-        if (t.mainCategory === '지출') activeBalances[t.fromAccountId] += Number(t.amount);
-        if (t.mainCategory === '수입') activeBalances[t.fromAccountId] -= Number(t.amount);
-        // 저축/투자 등 이동은 생략
-      });
 
-      curD.setDate(curD.getDate() - 1);
-    }
+    curD.setDate(curD.getDate() - 1);
   }
   
   const chartData = Object.values(chartDataMap)
@@ -100,11 +100,6 @@ export default function Assets() {
       <div className="bg-white p-6 rounded-xl border shadow-sm">
         <h3 className="font-bold mb-4">자산 현황 추이</h3>
         <div className="h-72">
-          {chartData.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              선택한 산정 기간 내 자산 평가(AssetValuations) 데이터가 없습니다.
-            </div>
-          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <XAxis dataKey="date" />
@@ -115,13 +110,12 @@ export default function Assets() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
-          )}
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-          <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트 (체크박스로 그래프 표시)</h3>
+          <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트 (체크박스로 그래프 표시)</h3><button onClick={handleAdd} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 자산 추가</button>
         </div>
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 border-b">
@@ -135,7 +129,7 @@ export default function Assets() {
               <th className="p-3">금융기관</th>
               <th className="p-3">계좌/자산명</th>
               <th className="p-3">유형</th>
-              <th className="p-3 text-right">잔액/평가액</th>
+              <th className="p-3 text-right">잔액/평가액</th><th className="p-3 text-right">관리</th>
             </tr>
           </thead>
           <tbody>

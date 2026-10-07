@@ -171,7 +171,10 @@ export default function Dashboard() {
                     label={({name, percent}) => name + ' (' + ((percent || 0) * 100).toFixed(0) + '%)'}
                   >
                     {
-                      Object.entries({}).map((_, index) => (
+                      Object.entries(monthlyTxs.filter(t => t.mainCategory === '지출').reduce((acc, t) => {
+                        acc[t.subCategory || '기타'] = (acc[t.subCategory || '기타'] || 0) + Number(t.amount);
+                        return acc;
+                      }, {} as Record<string, number>)).map((_, index) => (
                         <Cell key={'cell-' + index} fill={['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'][index % 7]} />
                       ))
                     }

@@ -46,7 +46,7 @@ export function useAppData() {
 }
 
 // 범용 낙관적 업데이트 훅
-export function useOptimisticMutation<T extends { id: string }>(sheetName: keyof AppData) {
+export function useOptimisticMutation<T extends { id?: string }>(sheetName: keyof AppData) {
   const queryClient = useQueryClient();
 
   return useMutation({

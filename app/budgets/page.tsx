@@ -1,10 +1,12 @@
 'use client';
-import { useAppData } from '@/lib/googleSheetsApi';
+import { useAppData, useOptimisticMutation } from '@/lib/googleSheetsApi';
 import { useDateStore, getDateRange } from '@/store/useDateStore';
 import { parseISO, format } from 'date-fns';
+import { Budget } from '@/types/finance';
 
 export default function Budgets() {
   const { data, isLoading } = useAppData();
+  const mutate = useOptimisticMutation<Budget>('Budgets');
   const { baseDay, periodType, selectedDate } = useDateStore();
   
   if (isLoading) return <div className="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</div>;
@@ -13,6 +15,19 @@ export default function Budgets() {
   const currentMonthStr = format(new Date(selectedDate), 'yyyy-MM');
   const currentMonthNumStr = format(new Date(selectedDate), 'yyyy.MM');
   
+  const handleAddBudget = () => {
+    const catId = prompt('카테고리 ID를 입력하세요 (예: cat_ex_1):');
+    if(!catId) return;
+    const yearMonth = prompt('대상 연월을 입력하세요 (예: 2026-10):', currentMonthStr);
+    const targetAmount = prompt('목표 예산 금액을 입력하세요:', '500000');
+    // 임시 ID(b.id)를 추가하여 삭제할 수 있도록 함
+    mutate.mutate({ action: 'CREATE', data: { id: 'B'+Date.now(), categoryId: catId, yearMonth: yearMonth || currentMonthStr, targetAmount: Number(targetAmount) || 0, warningThreshold: 80 } as any });
+  };
+
+  const handleDeleteBudget = (id: string) => {
+    if(confirm('이 예산을 삭제하시겠습니까?')) mutate.mutate({ action: 'DELETE', data: { id } as any });
+  };
+
   const budgets = data?.Budgets?.filter(b => {
     if (!b.yearMonth) return false;
     const yms = String(b.yearMonth);
@@ -60,7 +75,10 @@ export default function Budgets() {
       </section>
       
       <section>
-        <h2 className="text-lg font-bold mb-3">이번 달 예산 진행률</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold">이번 달 예산 진행률</h2>
+          <button onClick={handleAddBudget} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 예산 추가</button>
+        </div>
         {budgets.length === 0 ? (
           <div className="bg-white p-8 rounded-xl border text-center text-slate-500">
             이번 달에 설정된 예산이 없습니다. <br/><span className="text-sm">(구글 시트의 Budgets 탭에 예산을 추가해주세요)</span>
@@ -74,13 +92,18 @@ export default function Budgets() {
               const ratio = target > 0 ? (spent / target) * 100 : 0;
               const warningThreshold = Number(b.warningThreshold || 80);
               const isWarning = ratio >= warningThreshold;
+              // b as any allows us to read b.id if it exists
+              const bId = (b as any).id || b.categoryId;
               
               return (
-                <div key={b.categoryId} className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                <div key={bId} className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-end mb-3">
                     <div>
                       <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
-                      <h3 className="font-bold text-lg">{cat?.subCategory || b.categoryId}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-lg">{cat?.subCategory || b.categoryId}</h3>
+                        <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600">삭제</button>
+                      </div>
                     </div>
                     <div className="text-right">
                       <span className={`text-lg font-bold ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
