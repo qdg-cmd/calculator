@@ -102,7 +102,7 @@ export default function Assets() {
         <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
-                <XAxis dataKey="date" />
+                <XAxis dataKey="date" tickFormatter={(v) => v ? v.slice(5, 10).replace('-', '/') : ''} style={{fontSize: 12}} />
                 <YAxis tickFormatter={v => (v/10000)+'만'} />
                 <Tooltip formatter={(v: any) => Number(v).toLocaleString()+'원'} />
                 {selectedAssets.map((id, i) => (
@@ -129,7 +129,7 @@ export default function Assets() {
               <th className="p-3">금융기관</th>
               <th className="p-3">계좌/자산명</th>
               <th className="p-3">유형</th>
-              <th className="p-3 text-right">잔액/평가액</th><th className="p-3 text-right">관리</th>
+              <th className="p-3 text-right">잔액/평가액</th>
             </tr>
           </thead>
           <tbody>

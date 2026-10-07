@@ -79,13 +79,29 @@ export default function Budgets() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
-      <div>
-        <h1 className="text-2xl font-bold">예산 및 고정 지출 ({format(new Date(selectedDate), 'MM월')})</h1>
-        <p className="text-sm text-slate-500 mt-1">산정 기간: {format(startDate, 'yyyy.MM.dd')} ~ {format(endDate, 'yyyy.MM.dd')}</p>
+      
+      <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <button onClick={() => {
+            const newD = new Date(selectedDate);
+            newD.setMonth(newD.getMonth() - 1);
+            useDateStore.getState().setSelectedDate(newD.toISOString());
+          }} className="px-3 py-1 border rounded bg-slate-50 hover:bg-slate-100">&lt;</button>
+          <h1 className="font-bold text-base md:text-lg">예산 및 고정 지출 ({format(new Date(selectedDate), 'MM월')})</h1>
+          <button onClick={() => {
+            const newD = new Date(selectedDate);
+            newD.setMonth(newD.getMonth() + 1);
+            useDateStore.getState().setSelectedDate(newD.toISOString());
+          }} className="px-3 py-1 border rounded bg-slate-50 hover:bg-slate-100">&gt;</button>
+        </div>
+        <p className="text-xs md:text-sm text-slate-500 text-center md:text-right">
+          산정 기간: {format(startDate, 'yyyy.MM.dd')} ~ {format(endDate, 'yyyy.MM.dd')}
+        </p>
       </div>
 
+
       <section>
-        <h2 className="text-lg font-bold mb-3">고정 지출 / 자동 이체 (Recurring)</h2>
+        <h2 className="text-base md:text-lg font-bold mb-3">고정 지출 / 자동 이체 (Recurring)</h2>
         {recurrings.length === 0 ? (
           <div className="bg-slate-50 p-4 rounded-xl border text-center text-slate-500 text-sm">
             등록된 고정 지출이 없습니다.
@@ -98,7 +114,7 @@ export default function Budgets() {
                   <p className="font-bold text-slate-800">{r.name}</p>
                   <p className="text-xs text-slate-500">매월 {r.payDate}일</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right whitespace-nowrap">
                   <p className="font-bold text-blue-600">{Number(r.amount).toLocaleString()}원</p>
                 </div>
               </div>
@@ -133,13 +149,13 @@ export default function Budgets() {
                     <div>
                       <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <h3 className="font-bold text-lg">{cat?.subCategory || b.categoryId}</h3>
+                        <h3 className="font-bold text-base md:text-lg">{cat?.subCategory || b.categoryId}</h3>
                         <button onClick={() => handleOpenModal(b)} className="text-blue-400 text-xs hover:text-blue-600 border border-blue-200 px-2 py-0.5 rounded">수정</button>
                         <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600 border border-red-200 px-2 py-0.5 rounded">삭제</button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`text-lg font-bold ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
+                    <div className="text-right whitespace-nowrap">
+                      <span className={`text-base md:text-lg font-bold ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
                         {spent.toLocaleString()}원
                       </span>
                       <span className="text-sm text-slate-400"> / {target.toLocaleString()}원</span>
@@ -169,7 +185,7 @@ export default function Budgets() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
             <div className="p-5 border-b flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-lg">{editBudget ? '예산 수정' : '새 예산 추가'}</h3>
+              <h3 className="font-bold text-base md:text-lg">{editBudget ? '예산 수정' : '새 예산 추가'}</h3>
               <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
             </div>
             <div className="p-5 space-y-4 flex-1 overflow-y-auto">

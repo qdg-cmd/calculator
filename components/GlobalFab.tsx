@@ -21,7 +21,7 @@ export function GlobalFab() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-light transition-transform hover:scale-110 z-40"
+        className="fixed bottom-20 md:bottom-8 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-light transition-transform hover:scale-110 z-40"
         aria-label="새 거래내역 추가"
       >
         +

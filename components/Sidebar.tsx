@@ -33,7 +33,7 @@ export function Sidebar() {
               <Link key={item.name} href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive ? "bg-slate-100 text-blue-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  isActive ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}>
                 <Icon size={20} />
                 {item.name}
@@ -52,7 +52,7 @@ export function Sidebar() {
             <Link key={item.name} href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center w-full h-full space-y-1",
-                isActive ? "text-blue-600" : "text-slate-500"
+                isActive ? "text-blue-700 font-bold border-t-[3px] border-blue-600 bg-blue-50/50 -mt-[1px]" : "text-slate-500 hover:text-slate-900 border-t-[3px] border-transparent -mt-[1px]"
               )}>
               <Icon size={20} />
               <span className="text-[10px] font-medium">{item.name}</span>

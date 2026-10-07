@@ -43,13 +43,22 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
 
   if (!isOpen) return null;
 
-  const mainCategories = ['지출', '수입', '저축', '투자'];
+  const mainCategories = ['지출', '수입', '저축', '투자', '이동'];
   const filteredSubCats = categories.filter(c => c.mainCategory === formData.mainCategory);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Auto-assign transaction type
+    let tType = 'expense';
+    if (formData.mainCategory === '수입') tType = 'income';
+    else if (formData.mainCategory === '저축') tType = 'savings';
+    else if (formData.mainCategory === '투자') tType = 'investment';
+    else if (formData.mainCategory === '이동') tType = 'transfer';
+
     onSave({
       ...formData,
+      type: tType as any,
       id: formData.id || crypto.randomUUID(),
       isRecurring: formData.isRecurring || false
     });
@@ -90,30 +99,45 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
             </div>
             <div>
               <label className="block text-xs text-slate-500 mb-1">소분류</label>
-              <select className="w-full border rounded p-2 text-sm" required
+              <select className="w-full border rounded p-2 text-sm" required={formData.mainCategory !== '이동'}
                 value={formData.subCategory}
                 onChange={e => setFormData({...formData, subCategory: e.target.value})}>
                 <option value="">선택하세요</option>
                 {filteredSubCats.map(c => <option key={c.id} value={c.subCategory}>{c.subCategory}</option>)}
+                {formData.mainCategory === '이동' && <option value="계좌이체">계좌이체</option>}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">결제수단(계좌)</label>
-            <select className="w-full border rounded p-2 text-sm"
-              value={formData.fromAccountId}
-              onChange={e => setFormData({...formData, fromAccountId: e.target.value})}>
-              <option value="">선택 안함</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
-            </select>
-          </div>
+          {(formData.mainCategory !== '수입') && (
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">출금 계좌</label>
+              <select className="w-full border rounded p-2 text-sm"
+                value={formData.fromAccountId || ''}
+                onChange={e => setFormData({...formData, fromAccountId: e.target.value})}>
+                <option value="">선택 안함</option>
+                {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
+              </select>
+            </div>
+          )}
+
+          {(formData.mainCategory === '수입' || formData.mainCategory === '저축' || formData.mainCategory === '투자' || formData.mainCategory === '이동') && (
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">입금 계좌</label>
+              <select className="w-full border rounded p-2 text-sm"
+                value={formData.toAccountId || ''}
+                onChange={e => setFormData({...formData, toAccountId: e.target.value})}>
+                <option value="">선택 안함</option>
+                {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
+              </select>
+            </div>
+          )}
 
           <div>
-            <label className="block text-xs text-slate-500 mb-1">가맹점(사용처)</label>
+            <label className="block text-xs text-slate-500 mb-1">내역/사용처</label>
             <input type="text" className="w-full border rounded p-2 text-sm" 
               value={formData.merchant} 
-              onChange={e => setFormData({...formData, merchant: e.target.value})} required />
+              onChange={e => setFormData({...formData, merchant: e.target.value})} required={formData.mainCategory !== '이동'} />
           </div>
 
           <div>
