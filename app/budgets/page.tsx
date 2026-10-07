@@ -10,8 +10,8 @@ export default function Budgets() {
   if (isLoading) return <div className="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</div>;
 
   const { startDate, endDate } = getDateRange(selectedDate, baseDay, periodType);
-  const currentMonthStr = format(selectedDate, 'yyyy-MM');
-  const currentMonthNumStr = format(selectedDate, 'yyyy.MM');
+  const currentMonthStr = format(new Date(selectedDate), 'yyyy-MM');
+  const currentMonthNumStr = format(new Date(selectedDate), 'yyyy.MM');
   
   const budgets = data?.Budgets?.filter(b => {
     if (!b.yearMonth) return false;
@@ -29,7 +29,7 @@ export default function Budgets() {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
       <div>
-        <h1 className="text-2xl font-bold">예산 관리 ({format(selectedDate, 'MM월')})</h1>
+        <h1 className="text-2xl font-bold">예산 관리 ({format(new Date(selectedDate), 'MM월')})</h1>
         <p className="text-sm text-slate-500 mt-1">산정 기간: {format(startDate, 'yyyy.MM.dd')} ~ {format(endDate, 'yyyy.MM.dd')}</p>
       </div>
       

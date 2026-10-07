@@ -18,7 +18,8 @@ export default function Dashboard() {
   
   // Date Range calculation
   const { startDate, endDate } = getDateRange(selectedDate, baseDay, periodType);
-  const currentYear = selectedDate.getFullYear();
+  const parsedDate = new Date(selectedDate);
+  const currentYear = parsedDate.getFullYear();
 
   // Filter for Monthly / Calendar
   const monthlyTxs = txs.filter(tx => {
@@ -71,13 +72,13 @@ export default function Dashboard() {
           <button onClick={() => {
             const newD = new Date(selectedDate);
             newD.setMonth(newD.getMonth() - 1);
-            setSelectedDate(newD);
+            setSelectedDate(newD.toISOString());
           }} className="px-2 border rounded">&lt;</button>
-          <span className="font-bold text-lg">{format(selectedDate, 'yyyy년 MM월')}</span>
+          <span className="font-bold text-lg">{format(new Date(selectedDate), 'yyyy년 MM월')}</span>
           <button onClick={() => {
             const newD = new Date(selectedDate);
             newD.setMonth(newD.getMonth() + 1);
-            setSelectedDate(newD);
+            setSelectedDate(newD.toISOString());
           }} className="px-2 border rounded">&gt;</button>
         </div>
         

@@ -3,11 +3,11 @@ import { persist } from 'zustand/middleware';
 
 interface DateState {
   baseDay: number; // 1 ~ 31
-  periodType: 'calendar' | 'salary'; // 달력 기준 vs 월급 주기 기준
-  selectedDate: Date;
+  periodType: 'calendar' | 'salary';
+  selectedDate: string; // 저장 시 에러 방지를 위해 ISO string 사용
   setBaseDay: (day: number) => void;
   setPeriodType: (type: 'calendar' | 'salary') => void;
-  setSelectedDate: (date: Date) => void;
+  setSelectedDate: (date: string) => void;
 }
 
 export const useDateStore = create<DateState>()(
@@ -15,7 +15,7 @@ export const useDateStore = create<DateState>()(
     (set) => ({
       baseDay: 1,
       periodType: 'calendar',
-      selectedDate: new Date(),
+      selectedDate: new Date().toISOString(),
       setBaseDay: (day) => set({ baseDay: day }),
       setPeriodType: (type) => set({ periodType: type }),
       setSelectedDate: (date) => set({ selectedDate: date }),
@@ -26,8 +26,8 @@ export const useDateStore = create<DateState>()(
   )
 );
 
-// 산정 기준일에 따른 시작일과 종료일 계산 함수
-export function getDateRange(selectedDate: Date, baseDay: number, periodType: 'calendar' | 'salary') {
+export function getDateRange(selectedDateStr: string, baseDay: number, periodType: 'calendar' | 'salary') {
+  const selectedDate = new Date(selectedDateStr);
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth();
   
@@ -38,9 +38,6 @@ export function getDateRange(selectedDate: Date, baseDay: number, periodType: 'c
     };
   }
 
-  // 월급 주기 기준 (예: 25일)
-  // 현재 날짜가 25일 이전이면 전월 25일 ~ 당월 24일
-  // 현재 날짜가 25일 이후면 당월 25일 ~ 익월 24일
   const currentDay = selectedDate.getDate();
   let startMonth = month;
   let endMonth = month + 1;
