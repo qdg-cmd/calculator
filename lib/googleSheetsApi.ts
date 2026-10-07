@@ -3,99 +3,83 @@ import { Transaction, Account, CategoryItem, AssetValuation, Recurring, Budget }
 
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || 'https://script.google.com/macros/s/AKfycbwDFcd00SMa27jSn6ZpluqSZY4YxR2c0WCjYAioo3jq_NPLuliZLzy-CJI8_YdiScob7w/exec';
 
-export type CrudAction = 'READ' | 'CREATE' | 'UPDATE' | 'DELETE';
+export type CrudAction = 'CREATE' | 'UPDATE' | 'DELETE';
 
-export async function fetchSheetData<T>(sheetName: string): Promise<T[]> {
-  try {
-    const response = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'READ', sheetName })
-    });
-    
-    const result = await response.json();
-    if (!result.success) throw new Error(result.error);
-    return result.data as T[];
-  } catch (error) {
-    console.error(`Fetch Error on ${sheetName}:`, error);
-    return []; // 실패 시 빈 배열 반환하여 앱 크래시 방지
-  }
+interface AppData {
+  Accounts: Account[];
+  Transactions: Transaction[];
+  Budgets: Budget[];
+  Categories: CategoryItem[];
+  AssetValuations: AssetValuation[];
+  Recurring: Recurring[];
 }
 
-export async function mutateSheetData<T>(
-  sheetName: string, 
-  action: Exclude<CrudAction, 'READ'>, 
-  data: Partial<T> | Partial<T>[]
-): Promise<T | T[]> {
+export async function fetchAllData(): Promise<AppData> {
+  const response = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'READ_ALL' })
+  });
+  const result = await response.json();
+  if (!result.success) throw new Error(result.error);
+  return result.data as AppData;
+}
+
+export async function mutateSheetData<T>(sheetName: keyof AppData, action: CrudAction, data: Partial<T> | Partial<T>[]): Promise<T | T[]> {
   const response = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action, sheetName, data })
   });
-
   const result = await response.json();
   if (!result.success) throw new Error(result.error);
   return result.data;
 }
 
-// === React Query Hooks ===
-
-export function useTransactions() {
+// 통합 데이터 패칭 훅 (로딩 속도 대폭 개선)
+export function useAppData() {
   return useQuery({
-    queryKey: ['Transactions'],
-    queryFn: () => fetchSheetData<Transaction>('Transactions')
+    queryKey: ['appData'],
+    queryFn: fetchAllData,
+    staleTime: 5 * 60 * 1000, // 5분 캐시
   });
 }
 
-export function useAccounts() {
-  return useQuery({
-    queryKey: ['Accounts'],
-    queryFn: () => fetchSheetData<Account>('Accounts')
-  });
-}
-
-export function useCategories() {
-  return useQuery({
-    queryKey: ['Categories'],
-    queryFn: () => fetchSheetData<CategoryItem>('Categories')
-  });
-}
-
-export function useAssetValuations() {
-  return useQuery({
-    queryKey: ['AssetValuations'],
-    queryFn: () => fetchSheetData<AssetValuation>('AssetValuations')
-  });
-}
-
-export function useMutateTransaction() {
+// 범용 낙관적 업데이트 훅
+export function useOptimisticMutation<T extends { id: string }>(sheetName: keyof AppData) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ action, data }: { action: 'CREATE'|'UPDATE'|'DELETE', data: Partial<Transaction> }) => 
-      mutateSheetData<Transaction>('Transactions', action, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['Transactions'] });
-    }
-  });
-}
 
-export function useMutateTransactionsBatch() {
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Transaction>[]) => mutateSheetData<Transaction>('Transactions', 'CREATE', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['Transactions'] });
-    }
-  });
-}
+    mutationFn: ({ action, data }: { action: CrudAction, data: Partial<T> }) => mutateSheetData<T>(sheetName, action, data),
+    onMutate: async ({ action, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['appData'] });
+      const previousData = queryClient.getQueryData<AppData>(['appData']);
 
-export function useMutateCategory() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ action, data }: { action: 'CREATE'|'UPDATE'|'DELETE', data: Partial<CategoryItem> }) => 
-      mutateSheetData<CategoryItem>('Categories', action, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['Categories'] });
-    }
+      if (previousData) {
+        queryClient.setQueryData<AppData>(['appData'], (old) => {
+          if (!old) return old;
+          const list = [...old[sheetName]] as T[];
+          
+          if (action === 'CREATE') {
+            return { ...old, [sheetName]: [...list, data as T] };
+          } else if (action === 'UPDATE') {
+            return { ...old, [sheetName]: list.map(item => item.id === data.id ? { ...item, ...data } : item) };
+          } else if (action === 'DELETE') {
+            return { ...old, [sheetName]: list.filter(item => item.id !== data.id) };
+          }
+          return old;
+        });
+      }
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['appData'], context.previousData);
+      }
+    },
+    onSettled: () => {
+      // 백그라운드에서 진짜 데이터로 동기화
+      queryClient.invalidateQueries({ queryKey: ['appData'] });
+    },
   });
 }

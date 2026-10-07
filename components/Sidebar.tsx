@@ -8,10 +8,10 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { name: '대시보드', href: '/', icon: LayoutDashboard },
   { name: '거래 내역', href: '/transactions', icon: Receipt },
-  { name: '데이터 수입', href: '/import', icon: Download },
-  { name: '예산 관리', href: '/budget', icon: PieChart },
-  { name: '자산/부채', href: '/assets', icon: WalletCards },
   { name: '카테고리', href: '/categories', icon: Tags },
+  { name: '자산/부채', href: '/assets', icon: WalletCards },
+  { name: '예산 관리', href: '/budgets', icon: PieChart },
+  { name: '데이터 수입', href: '/import', icon: Download },
   { name: '설정', href: '/settings', icon: Settings },
 ];
 
