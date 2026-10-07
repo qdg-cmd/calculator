@@ -42,9 +42,13 @@ export default function Dashboard() {
   const expenseRatio = totalIncome > 0 ? ((totalExpense / totalIncome) * 100).toFixed(1) : 0;
   const savingsRatio = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : 0;
 
-  // Calendar setup
-  const daysInMonth = new Date(currentYear, selectedDate.getMonth() + 1, 0).getDate();
-  const calendarDays = Array.from({length: daysInMonth}, (_, i) => new Date(currentYear, selectedDate.getMonth(), i + 1));
+  // Calendar setup (산정 기준일에 맞춘 동적 달력)
+  const calendarDays: Date[] = [];
+  let curD = new Date(startDate);
+  while (curD <= endDate) {
+    calendarDays.push(new Date(curD));
+    curD.setDate(curD.getDate() + 1);
+  }
 
   // Payment method (Account) breakdown for Monthly view
   const expenseByAccount = monthlyTxs.filter(t => t.mainCategory === '지출').reduce((acc, t) => {

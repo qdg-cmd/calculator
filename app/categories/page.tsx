@@ -1,18 +1,52 @@
 'use client';
-
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { useAppData } from '@/lib/googleSheetsApi';
+import { useAppData, useOptimisticMutation } from '@/lib/googleSheetsApi';
+import { CategoryItem } from '@/types/finance';
 
 const TABS = ['지출', '수입', '저축', '투자'];
 
 export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState('지출');
   const { data, isLoading } = useAppData();
+  const mutate = useOptimisticMutation<CategoryItem>('Categories');
   const categories = data?.Categories || [];
 
   const currentSubCats = categories.filter(c => c.mainCategory === activeTab);
+
+  const handleAdd = () => {
+    const subCat = prompt(`${activeTab}의 새로운 소분류 이름을 입력하세요:`);
+    if (subCat && subCat.trim() !== '') {
+      mutate.mutate({
+        action: 'CREATE',
+        data: {
+          id: crypto.randomUUID(),
+          mainCategory: activeTab as any,
+          subCategory: subCat.trim()
+        }
+      });
+    }
+  };
+
+  const handleEdit = (cat: CategoryItem) => {
+    const newSubCat = prompt('소분류 이름을 수정하세요:', cat.subCategory);
+    if (newSubCat && newSubCat.trim() !== '' && newSubCat !== cat.subCategory) {
+      mutate.mutate({
+        action: 'UPDATE',
+        data: { ...cat, subCategory: newSubCat.trim() }
+      });
+    }
+  };
+
+  const handleDelete = (cat: CategoryItem) => {
+    if (confirm(`'${cat.subCategory}' 카테고리를 정말 삭제하시겠습니까?`)) {
+      mutate.mutate({
+        action: 'DELETE',
+        data: { id: cat.id }
+      });
+    }
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
@@ -21,7 +55,7 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-slate-800">카테고리 관리</h1>
           <p className="text-sm text-slate-500 mt-1">대분류 및 소분류를 추가하고 편집하세요.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
           <Plus size={16} /> 소분류 추가
         </button>
       </div>
@@ -48,13 +82,18 @@ export default function CategoriesPage() {
             <Card key={sub.id} className="group hover:border-blue-300 transition-colors">
               <CardContent className="p-4 flex justify-between items-center">
                 <span className="font-medium text-slate-700">{sub.subCategory}</span>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="text-slate-400 hover:text-blue-600"><Edit2 size={16} /></button>
-                  <button className="text-slate-400 hover:text-red-600"><Trash2 size={16} /></button>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEdit(sub)} className="text-slate-400 hover:text-blue-600 p-1"><Edit2 size={16} /></button>
+                  <button onClick={() => handleDelete(sub)} className="text-slate-400 hover:text-red-600 p-1"><Trash2 size={16} /></button>
                 </div>
               </CardContent>
             </Card>
           ))}
+          {currentSubCats.length === 0 && (
+            <div className="col-span-full p-8 text-center text-slate-400 border-2 border-dashed rounded-xl">
+              등록된 소분류가 없습니다.
+            </div>
+          )}
         </div>
       )}
     </div>

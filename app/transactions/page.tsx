@@ -19,6 +19,7 @@ export default function Transactions() {
   const categories = data?.Categories || [];
   
   const filtered = txs.filter(t => 
+    t.mainCategory?.includes(search) ||
     t.merchant?.includes(search) || 
     t.subCategory?.includes(search) || 
     t.memo?.includes(search) || 

@@ -47,21 +47,12 @@ export default function Assets() {
       </div>
 
       <div className="bg-white p-6 rounded-xl border shadow-sm">
-        <h3 className="font-bold mb-4">자산 현황 추이 (체크박스로 그래프 켜고 끄기)</h3>
-        <div className="flex gap-4 mb-4 flex-wrap">
-          {['TOTAL', ...Array.from(new Set(vals.map(v => v.assetId).filter(id => id !== 'TOTAL')))].map(id => (
-            <label key={id} className="flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-1 rounded-full border hover:bg-slate-100 transition-colors">
-              <input type="checkbox" checked={selectedAssets.includes(id)} onChange={(e) => {
-                if (e.target.checked) setSelectedAssets(prev => [...prev, id]);
-                else setSelectedAssets(prev => prev.filter(x => x !== id));
-              }} />
-              <span className="text-sm">{id === 'TOTAL' ? '총 자산' : id}</span>
-            </label>
-          ))}
-        </div>
+        <h3 className="font-bold mb-4">자산 현황 추이</h3>
         <div className="h-72">
           {chartData.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400">해당 기간의 평가 데이터가 없습니다.</div>
+            <div className="flex items-center justify-center h-full text-slate-400">
+              선택한 산정 기간 내 자산 평가(AssetValuations) 데이터가 없습니다.
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
@@ -69,7 +60,7 @@ export default function Assets() {
                 <YAxis tickFormatter={v => (v/10000)+'만'} />
                 <Tooltip formatter={(v: any) => Number(v).toLocaleString()+'원'} />
                 {selectedAssets.map((id, i) => (
-                  <Line key={id} type="monotone" dataKey={id} stroke={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7'][i%5]} strokeWidth={2} dot={false} />
+                  <Line key={id} type="monotone" dataKey={id} stroke={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#ec4899', '#6366f1'][i%7]} strokeWidth={2} dot={false} />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -78,12 +69,18 @@ export default function Assets() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-4 border-b bg-slate-50">
-          <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트</h3>
+        <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+          <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트 (체크박스로 그래프 표시)</h3>
         </div>
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 border-b">
             <tr>
+              <th className="p-3 w-12 text-center">
+                <input type="checkbox" checked={selectedAssets.includes('TOTAL')} onChange={(e) => {
+                  if (e.target.checked) setSelectedAssets(prev => [...prev, 'TOTAL']);
+                  else setSelectedAssets(prev => prev.filter(x => x !== 'TOTAL'));
+                }} />
+              </th>
               <th className="p-3">금융기관</th>
               <th className="p-3">계좌/자산명</th>
               <th className="p-3">유형</th>
@@ -91,10 +88,21 @@ export default function Assets() {
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td className="p-3 text-center border-b"></td>
+              <td colSpan={3} className="p-3 font-bold border-b text-blue-600">총 자산 (TOTAL)</td>
+              <td className="p-3 text-right font-bold text-blue-600 border-b">{totalBalance.toLocaleString()} KRW</td>
+            </tr>
             {accounts.map(acc => (
               <tr key={acc.id} className="border-b hover:bg-slate-50">
-                <td className="p-3">{acc.institution}</td>
-                <td className="p-3 font-medium">{acc.name}</td>
+                <td className="p-3 text-center">
+                  <input type="checkbox" checked={selectedAssets.includes(acc.id)} onChange={(e) => {
+                    if (e.target.checked) setSelectedAssets(prev => [...prev, acc.id]);
+                    else setSelectedAssets(prev => prev.filter(x => x !== acc.id));
+                  }} />
+                </td>
+                <td className="p-3 font-medium">{acc.institution}</td>
+                <td className="p-3">{acc.name}</td>
                 <td className="p-3 text-slate-500">
                   {acc.type === 'cash' ? '현금' : acc.type === 'savings' ? '예적금' : acc.type === 'investment' ? '투자' : acc.type === 'loan' ? '대출' : '신용카드'}
                 </td>
@@ -102,7 +110,7 @@ export default function Assets() {
               </tr>
             ))}
             {accounts.length === 0 && (
-              <tr><td colSpan={4} className="p-8 text-center text-slate-400">등록된 계좌가 없습니다.</td></tr>
+              <tr><td colSpan={5} className="p-8 text-center text-slate-400">등록된 계좌가 없습니다.</td></tr>
             )}
           </tbody>
         </table>

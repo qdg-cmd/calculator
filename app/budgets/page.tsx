@@ -11,8 +11,13 @@ export default function Budgets() {
 
   const { startDate, endDate } = getDateRange(selectedDate, baseDay, periodType);
   const currentMonthStr = format(selectedDate, 'yyyy-MM');
+  const currentMonthNumStr = format(selectedDate, 'yyyy.MM');
   
-  const budgets = data?.Budgets?.filter(b => b.yearMonth === currentMonthStr) || [];
+  const budgets = data?.Budgets?.filter(b => {
+    if (!b.yearMonth) return false;
+    const yms = String(b.yearMonth);
+    return yms.startsWith(currentMonthStr) || yms.startsWith(currentMonthNumStr) || yms === currentMonthStr.replace('-','');
+  }) || [];
   const txs = data?.Transactions || [];
 
   const monthlyTxs = txs.filter(tx => {
