@@ -153,7 +153,7 @@ export default function Transactions() {
               <th className="p-3">분류</th>
               <th className="p-3">결제수단</th>
               <th className="p-3">가맹점(내용)</th>
-              <th className="p-3 text-right">금액</th>
+              <th className="p-3 text-right">금액</th>\n                <th className="p-3 text-center">관리</th>\n                <th className="p-3 text-center">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -178,8 +178,7 @@ export default function Transactions() {
                   (t.mainCategory === '수입' ? 'text-blue-600' : 
                    t.mainCategory === '지출' ? 'text-red-600' : 
                    'text-emerald-600')}>
-                  {t.mainCategory === '지출' ? '-' : '+'}{Number(t.amount).toLocaleString()}원
-                </td>
+                  {t.mainCategory === '지출' ? '-' : '+'}{Number(t.amount).toLocaleString()}원\n                </td>\n                <td className='p-3 text-center'>\n                  {!bulkMode && <button onClick={(e) => { e.stopPropagation(); if (confirm('정말 삭제하시겠습니까?')) { mutate.mutate({ action: 'DELETE', data: { id: t.id } }); } }} className='text-red-500 hover:bg-red-50 px-3 py-1 rounded-lg text-sm font-bold border border-red-200'>삭제</button>}\n                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
