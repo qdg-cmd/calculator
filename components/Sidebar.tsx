@@ -6,7 +6,7 @@ import { LayoutDashboard, Receipt, Tags, WalletCards, PieChart, Download, Settin
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { name: '대시보드', href: '/', icon: LayoutDashboard },
+  { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
   { name: '거래 내역', href: '/transactions', icon: Receipt },
   { name: '카테고리', href: '/categories', icon: Tags },
   { name: '자산/부채', href: '/assets', icon: WalletCards },
