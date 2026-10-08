@@ -113,11 +113,11 @@ export default function Assets() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden overflow-x-auto">
         <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
           <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트 (체크박스로 그래프 표시)</h3><button onClick={handleAdd} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 자산 추가</button>
         </div>
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-slate-50 border-b">
             <tr>
               <th className="p-3 w-12 text-center">

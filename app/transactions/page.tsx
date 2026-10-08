@@ -132,8 +132,8 @@ export default function Transactions() {
         </div>
       )}
         
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden overflow-x-auto">
+        <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-slate-50 border-b">
             <tr>
               {bulkMode && (

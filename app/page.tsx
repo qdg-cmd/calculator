@@ -152,15 +152,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-3 gap-2 md:gap-4">
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm">
           <p className="text-[10px] md:text-sm text-slate-500 mb-1">총 수입</p>
-          <h2 className="text-sm md:text-2xl font-bold text-blue-600 break-words">{totalIncome.toLocaleString()}원</h2>
+          <h2 className="font-bold text-blue-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalIncome.toLocaleString()}원</h2>
         </div>
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm">
           <p className="text-[10px] md:text-sm text-slate-500 mb-1">총 지출 <span className="hidden md:inline">(수입대비 {expenseRatio}%)</span></p>
-          <h2 className="text-sm md:text-2xl font-bold text-red-600 break-words">{totalExpense.toLocaleString()}원</h2>
+          <h2 className="font-bold text-red-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalExpense.toLocaleString()}원</h2>
         </div>
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm">
           <p className="text-[10px] md:text-sm text-slate-500 mb-1">저축/투자 <span className="hidden md:inline">(수입대비 {savingsRatio}%)</span></p>
-          <h2 className="text-sm md:text-2xl font-bold text-emerald-600 break-words">{totalSavings.toLocaleString()}원</h2>
+          <h2 className="font-bold text-emerald-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalSavings.toLocaleString()}원</h2>
         </div>
       </div>
 
@@ -286,7 +286,7 @@ export default function Dashboard() {
               <button onClick={() => setModalFilter(null)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
             </div>
             <div className="p-0 overflow-y-auto flex-1">
-              <table className="w-full text-left text-xs md:text-sm">
+              <table className="w-full text-left text-xs md:text-sm whitespace-nowrap">
                 <thead className="bg-slate-50 border-b sticky top-0">
                   <tr>
                     <th className="p-2 md:p-3">날짜</th>

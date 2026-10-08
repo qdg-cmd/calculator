@@ -43,6 +43,7 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
 
   if (!isOpen) return null;
 
+  const validAccounts = accounts.filter(a => a && a.id && String(a.id).trim() !== '' && a.name && String(a.name) !== '0');
   const mainCategories = ['지출', '수입', '저축', '투자', '이동'];
   const filteredSubCats = categories.filter(c => c.mainCategory === formData.mainCategory);
 
@@ -88,25 +89,31 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">대분류</label>
-              <select className="w-full border rounded p-2 text-sm"
-                value={formData.mainCategory}
-                onChange={e => setFormData({...formData, mainCategory: e.target.value as any, subCategory: ''})}>
-                {mainCategories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">대분류</label>
+            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+              {mainCategories.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setFormData({...formData, mainCategory: c as any, subCategory: ''})}
+                  className={`flex-1 py-1.5 text-xs md:text-sm rounded-md transition-colors ${formData.mainCategory === c ? 'bg-white shadow font-bold text-blue-600' : 'text-slate-500 hover:bg-slate-200'}`}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">소분류</label>
-              <select className="w-full border rounded p-2 text-sm" required={formData.mainCategory !== '이동'}
-                value={formData.subCategory}
-                onChange={e => setFormData({...formData, subCategory: e.target.value})}>
-                <option value="">선택하세요</option>
-                {filteredSubCats.map(c => <option key={c.id} value={c.subCategory}>{c.subCategory}</option>)}
-                {formData.mainCategory === '이동' && <option value="계좌이체">계좌이체</option>}
-              </select>
-            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">소분류</label>
+            <select className="w-full border rounded p-2 text-sm" required={formData.mainCategory !== '이동'}
+              value={formData.subCategory}
+              onChange={e => setFormData({...formData, subCategory: e.target.value})}>
+              <option value="">선택하세요</option>
+              {filteredSubCats.map(c => <option key={c.id} value={c.subCategory}>{c.subCategory}</option>)}
+              {formData.mainCategory === '이동' && <option value="계좌이체">계좌이체</option>}
+            </select>
           </div>
 
           {(formData.mainCategory !== '수입') && (
@@ -116,7 +123,7 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
                 value={formData.fromAccountId || ''}
                 onChange={e => setFormData({...formData, fromAccountId: e.target.value})}>
                 <option value="">선택 안함</option>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
+                {validAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
               </select>
             </div>
           )}
@@ -128,7 +135,7 @@ export function TransactionModal({ isOpen, onClose, onSave, initialData, account
                 value={formData.toAccountId || ''}
                 onChange={e => setFormData({...formData, toAccountId: e.target.value})}>
                 <option value="">선택 안함</option>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
+                {validAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.institution})</option>)}
               </select>
             </div>
           )}
