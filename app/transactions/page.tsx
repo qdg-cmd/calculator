@@ -21,7 +21,12 @@ export default function Transactions() {
 
   if (isLoading) return <div className="p-8">로딩 중...</div>;
   const txs = data?.Transactions || [];
-  const accounts = data?.Accounts || [];
+    const accounts = data?.Accounts || [];
+    const activeAccounts = accounts.filter(a => {
+      if (!a.id || a.id === '0' || !a.name || String(a.name) === '0') return false;
+      const bal = Number(a.balance);
+      return !isNaN(bal) && bal !== 0 && String(a.balance) !== '' && a.balance !== null;
+    });
   const categories = data?.Categories || [];
   
   // 일반 검색 필터
@@ -189,8 +194,12 @@ export default function Transactions() {
         onClose={() => setIsModalOpen(false)} 
         onSave={handleSave} 
         initialData={editingTx}
-        accounts={accounts}
-        categories={categories}
+          accounts={accounts}
+          categories={categories}
+          onDelete={(id) => {
+            mutate.mutate({ action: 'DELETE', data: { id } });
+            setIsModalOpen(false);
+          }}
       />
     </div>
   );

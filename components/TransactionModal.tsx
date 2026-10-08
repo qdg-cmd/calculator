@@ -5,12 +5,20 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: (tx: Partial<Transaction>) => void;
+  onDelete?: (id: string) => void;
   initialData?: Transaction | null;
   accounts: Account[];
   categories: CategoryItem[];
 }
 
-export function TransactionModal({ isOpen, onClose, onSave, initialData, accounts, categories }: Props) {
+export function TransactionModal({ isOpen, onClose, onSave, onDelete, initialData, accounts, categories }: Props) {
+  
+  const activeAccounts = accounts.filter(a => {
+    if (!a.id || a.id === '0' || !a.name || String(a.name) === '0') return false;
+    const bal = Number(a.balance);
+    return !isNaN(bal) && bal !== 0 && String(a.balance) !== '' && a.balance !== null;
+  });
+
   const [formData, setFormData] = useState<Partial<Transaction>>({
     date: new Date().toISOString(),
     amount: 0,
