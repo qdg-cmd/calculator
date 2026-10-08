@@ -162,9 +162,16 @@ export function TransactionModal({ isOpen, onClose, onSave, onDelete, initialDat
               onChange={e => setFormData({...formData, memo: e.target.value})} />
           </div>
 
-          <div className="pt-4 flex gap-2 justify-end border-t">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-sm">취소</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">저장</button>
+          <div className="pt-4 flex justify-between items-center border-t">
+            {initialData && onDelete ? (
+              <button type="button" onClick={() => onDelete(initialData.id)} className="text-red-500 hover:text-red-700 font-bold px-4 py-2 rounded-lg bg-red-50 text-sm">
+                삭제
+              </button>
+            ) : <div></div>}
+            <div className="flex gap-2">
+              <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-sm">취소</button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">저장</button>
+            </div>
           </div>
         </form>
       </div>
