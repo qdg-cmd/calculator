@@ -22,7 +22,19 @@ export async function fetchAllData(): Promise<AppData> {
   });
   const result = await response.json();
   if (!result.success) throw new Error(result.error);
-  return result.data as AppData;
+  
+  const data = result.data as AppData;
+  
+  // Sanitization: Remove transactions with invalid dates to prevent crashing
+  if (data.Transactions) {
+    data.Transactions = data.Transactions.filter(tx => {
+      if (!tx.date) return false;
+      const d = new Date(tx.date);
+      return !isNaN(d.getTime());
+    });
+  }
+  
+  return data;
 }
 
 export async function mutateSheetData<T>(sheetName: keyof AppData, action: CrudAction, data: Partial<T> | Partial<T>[]): Promise<T | T[]> {
