@@ -17,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="bg-slate-50 text-slate-900 antialiased">
+        <script dangerouslySetInnerHTML={{ __html: `if (typeof window !== "undefined" && "serviceWorker" in navigator) { window.addEventListener("load", function() { navigator.serviceWorker.register("/sw.js"); }); }` }} />
         <Providers>
           <Sidebar />
           <main className="md:pl-64 pb-16 md:pb-0 min-h-screen">

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Transaction, Account, CategoryItem, AssetValuation, Recurring, Budget } from '../types/finance';
 
-const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || 'https://script.google.com/macros/s/AKfycbwDFcd00SMa27jSn6ZpluqSZY4YxR2c0WCjYAioo3jq_NPLuliZLzy-CJI8_YdiScob7w/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwDFcd00SMa27jSn6ZpluqSZY4YxR2c0WCjYAioo3jq_NPLuliZLzy-CJI8_YdiScob7w/exec';
 
 export type CrudAction = 'CREATE' | 'UPDATE' | 'DELETE';
 
