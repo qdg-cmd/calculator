@@ -147,8 +147,15 @@ export default function TransactionsPage() {
         <div className="flex flex-col">
           {filtered.map(t => (
             <div key={t.id} 
-              onClick={() => { if (!bulkMode) { setEditingTx(t); setIsModalOpen(true); } }}
-              className={`border-b p-4 flex items-center justify-between transition-colors ${bulkMode ? 'cursor-default' : 'cursor-pointer active:bg-slate-100 hover:bg-slate-50'} ${selectedTxIds.includes(t.id) ? 'bg-indigo-50' : 'bg-white'}`}
+              onClick={(e) => { 
+  if (bulkMode) { 
+    toggleSelect(t.id); 
+  } else { 
+    setEditingTx(t); 
+    setIsModalOpen(true); 
+  } 
+}}
+              className={`border-b p-4 flex items-center justify-between transition-colors cursor-pointer active:bg-slate-100 hover:bg-slate-50 ${selectedTxIds.includes(t.id) ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-white'}`}
             >
               <div className="flex items-center gap-3 overflow-hidden">
                 {bulkMode && (

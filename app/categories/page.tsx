@@ -55,7 +55,7 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-slate-800">카테고리 관리</h1>
           <p className="text-sm text-slate-500 mt-1">대분류 및 소분류를 추가하고 편집하세요.</p>
         </div>
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
           <Plus size={16} /> 소분류 추가
         </button>
       </div>
@@ -82,7 +82,7 @@ export default function CategoriesPage() {
             <Card key={sub.id} className="group hover:border-blue-300 transition-colors">
               <CardContent className="p-4 flex justify-between items-center">
                 <span className="font-medium text-slate-700">{sub.subCategory}</span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 whitespace-nowrap">
                   <button onClick={() => handleEdit(sub)} className="text-slate-400 hover:text-blue-600 p-1"><Edit2 size={16} /></button>
                   <button onClick={() => handleDelete(sub)} className="text-slate-400 hover:text-red-600 p-1"><Trash2 size={16} /></button>
                 </div>

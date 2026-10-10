@@ -80,8 +80,8 @@ export default function Budgets() {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
       
-      <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="bg-white p-3 md:p-4 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-3 whitespace-nowrap">
+        <div className="flex items-center justify-between gap-2 whitespace-nowrap">
           <button onClick={() => {
             const newD = new Date(selectedDate);
             newD.setMonth(newD.getMonth() - 1);
@@ -107,7 +107,7 @@ export default function Budgets() {
             등록된 고정 지출이 없습니다.
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3 whitespace-nowrap">
             {recurrings.map(r => (
               <div key={r.id} className="bg-white p-4 rounded-xl border shadow-sm flex justify-between items-center">
                 <div>
@@ -148,7 +148,7 @@ export default function Budgets() {
                   <div className="flex justify-between items-end mb-3">
                     <div>
                       <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 whitespace-nowrap">
                         <h3 className="font-bold text-base md:text-lg">{cat?.subCategory || b.categoryId}</h3>
                         <button onClick={() => handleOpenModal(b)} className="text-blue-400 text-xs hover:text-blue-600 border border-blue-200 px-2 py-0.5 rounded">수정</button>
                         <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600 border border-red-200 px-2 py-0.5 rounded">삭제</button>
@@ -192,7 +192,7 @@ export default function Budgets() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">예산 대상 카테고리</label>
                 <select 
-                  className="w-full border rounded-lg p-2 bg-slate-50"
+                  className="w-full border rounded-lg p-2 bg-slate-50 whitespace-nowrap"
                   value={catId} 
                   onChange={(e) => setCatId(e.target.value)}
                 >
@@ -206,7 +206,7 @@ export default function Budgets() {
                 <label className="block text-sm font-bold text-slate-700 mb-1">대상 연월 (YYYY-MM)</label>
                 <input 
                   type="text" 
-                  className="w-full border rounded-lg p-2 bg-slate-50" 
+                  className="w-full border rounded-lg p-2 bg-slate-50 whitespace-nowrap" 
                   value={yearMonth} 
                   onChange={(e) => setYearMonth(e.target.value)} 
                 />
@@ -215,13 +215,13 @@ export default function Budgets() {
                 <label className="block text-sm font-bold text-slate-700 mb-1">목표 예산 금액</label>
                 <input 
                   type="number" 
-                  className="w-full border rounded-lg p-2 bg-slate-50 font-bold text-blue-600" 
+                  className="w-full border rounded-lg p-2 bg-slate-50 font-bold text-blue-600 whitespace-nowrap" 
                   value={targetAmount} 
                   onChange={(e) => setTargetAmount(e.target.value)} 
                 />
               </div>
             </div>
-            <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
+            <div className="p-4 border-t bg-slate-50 flex justify-end gap-2 whitespace-nowrap">
               <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors">취소</button>
               <button onClick={handleSaveBudget} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold shadow-sm hover:bg-slate-700 transition-colors">저장하기</button>
             </div>

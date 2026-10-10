@@ -113,19 +113,16 @@ export default function Assets() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden overflow-x-auto">
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
           <h3 className="font-bold text-slate-800">보유 계좌 / 자산 리스트 (체크박스로 그래프 표시)</h3><button onClick={handleAdd} className="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">+ 자산 추가</button>
         </div>
-        <table className="w-full text-left text-sm whitespace-nowrap">
+        
+        {/* Desktop Table */}
+        <table className="hidden md:table w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-slate-50 border-b">
             <tr>
-              <th className="p-3 w-12 text-center">
-                <input type="checkbox" checked={selectedAssets.includes('TOTAL')} onChange={(e) => {
-                  if (e.target.checked) setSelectedAssets(prev => [...prev, 'TOTAL']);
-                  else setSelectedAssets(prev => prev.filter(x => x !== 'TOTAL'));
-                }} />
-              </th>
+              <th className="p-3 w-12 text-center">그래프</th>
               <th className="p-3">금융기관</th>
               <th className="p-3">계좌/자산명</th>
               <th className="p-3">유형</th>
@@ -133,32 +130,55 @@ export default function Assets() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="p-3 text-center border-b"></td>
-              <td colSpan={3} className="p-3 font-bold border-b text-blue-600">총 자산 (TOTAL)</td>
-              <td className="p-3 text-right font-bold text-blue-600 border-b">{totalBalance.toLocaleString()} KRW</td>
+            <tr className={`border-b cursor-pointer transition-colors ${selectedAssets.includes('TOTAL') ? 'bg-indigo-50' : 'hover:bg-slate-50'}`} 
+                onClick={() => setSelectedAssets(prev => prev.includes('TOTAL') ? prev.filter(x => x !== 'TOTAL') : [...prev, 'TOTAL'])}>
+              <td className="p-3 text-center">
+                <div className={`w-4 h-4 rounded-full mx-auto ${selectedAssets.includes('TOTAL') ? 'bg-indigo-500' : 'border-2 border-slate-300'}`}></div>
+              </td>
+              <td colSpan={3} className="p-3 font-bold text-blue-600">총 자산 (TOTAL)</td>
+              <td className="p-3 text-right font-bold text-blue-600">{totalBalance.toLocaleString()} KRW</td>
             </tr>
             {accounts.map(acc => (
-              <tr key={acc.id} className="border-b hover:bg-slate-50">
+              <tr key={acc.id} className={`border-b cursor-pointer transition-colors ${selectedAssets.includes(acc.id) ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                  onClick={() => setSelectedAssets(prev => prev.includes(acc.id) ? prev.filter(x => x !== acc.id) : [...prev, acc.id])}>
                 <td className="p-3 text-center">
-                  <input type="checkbox" checked={selectedAssets.includes(acc.id)} onChange={(e) => {
-                    if (e.target.checked) setSelectedAssets(prev => [...prev, acc.id]);
-                    else setSelectedAssets(prev => prev.filter(x => x !== acc.id));
-                  }} />
+                  <div className={`w-4 h-4 rounded-full mx-auto ${selectedAssets.includes(acc.id) ? 'bg-indigo-500' : 'border-2 border-slate-300'}`}></div>
                 </td>
                 <td className="p-3 font-medium">{acc.institution}</td>
                 <td className="p-3">{acc.name}</td>
                 <td className="p-3 text-slate-500">
                   {acc.type === 'cash' ? '현금' : acc.type === 'savings' ? '예적금' : acc.type === 'investment' ? '투자' : acc.type === 'loan' ? '대출' : '신용카드'}
                 </td>
-                <td className="p-3 text-right font-medium text-slate-700">{Number(acc.balance).toLocaleString()} {acc.currency || 'KRW'}</td>
+                <td className="p-3 text-right font-medium text-slate-700">{Number(acc.balance).toLocaleString()}</td>
               </tr>
             ))}
-            {accounts.length === 0 && (
-              <tr><td colSpan={5} className="p-8 text-center text-slate-400">등록된 계좌가 없습니다.</td></tr>
-            )}
           </tbody>
         </table>
+
+        {/* Mobile Card Layout */}
+        <div className="md:hidden flex flex-col">
+          <div className={`p-4 border-b cursor-pointer transition-colors ${selectedAssets.includes('TOTAL') ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-white active:bg-slate-50'}`}
+               onClick={() => setSelectedAssets(prev => prev.includes('TOTAL') ? prev.filter(x => x !== 'TOTAL') : [...prev, 'TOTAL'])}>
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-blue-600">총 자산 (TOTAL)</span>
+              <span className="font-bold text-blue-600">{totalBalance.toLocaleString()} KRW</span>
+            </div>
+          </div>
+          {accounts.map(acc => (
+            <div key={acc.id} className={`p-4 border-b cursor-pointer transition-colors ${selectedAssets.includes(acc.id) ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-white active:bg-slate-50'}`}
+                 onClick={() => setSelectedAssets(prev => prev.includes(acc.id) ? prev.filter(x => x !== acc.id) : [...prev, acc.id])}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-bold text-slate-900">{acc.name}</span>
+                <span className="font-bold text-slate-700">{Number(acc.balance).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <span>{acc.institution}</span>
+                <span>{acc.type === 'cash' ? '현금' : acc.type === 'savings' ? '예적금' : acc.type === 'investment' ? '투자' : acc.type === 'loan' ? '대출' : '신용카드'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );

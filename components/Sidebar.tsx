@@ -44,7 +44,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t flex justify-around items-center h-16 z-50 px-2 pb-safe">
+      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t flex items-center h-16 z-50 px-2 pb-safe overflow-x-auto gap-4" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
         {navItems.filter(i => ["/dashboard", "/transactions", "/budgets", "/settings"].includes(i.href)).map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
