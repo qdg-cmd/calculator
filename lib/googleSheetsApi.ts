@@ -16,14 +16,11 @@ interface AppData {
 
 export async function fetchAllData(): Promise<AppData> {
   const response = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'READ_ALL' })
+    method: 'GET'
   });
   const result = await response.json();
-  if (!result.success) throw new Error(result.error);
-  
-  const data = result.data as AppData;
+  if (result.success === false) throw new Error(result.error);
+  const data = (result.data ? result.data : result) as AppData;
   
   // Sanitization: Remove transactions with invalid dates to prevent crashing
   if (data.Transactions) {
