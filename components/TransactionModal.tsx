@@ -78,7 +78,7 @@ export function TransactionModal({ isOpen, onClose, onSave, onDelete, initialDat
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex flex-col justify-end sm:justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/70 flex flex-col justify-end sm:justify-center items-center z-[80] p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0">
         <div className="p-3 border-b flex justify-between items-center bg-slate-50 shrink-0">
           <h2 className="font-bold text-base">{initialData ? '거래 내역 수정' : '새 거래 내역 추가'}</h2>
