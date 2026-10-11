@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Transaction, Account, CategoryItem } from '@/types/finance';
+import { useModalBackHandler } from '@/lib/useModalBackHandler';
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function TransactionModal({ isOpen, onClose, onSave, onDelete, initialData, accounts, categories }: Props) {
+  useModalBackHandler(isOpen, onClose);
   
   const activeAccounts = accounts.filter(a => {
     if (!a.id || a.id === '0' || !a.name || String(a.name) === '0') return false;

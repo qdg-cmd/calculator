@@ -128,6 +128,21 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* PWA 앱 설치 안내 영역 */}
+        <section>
+          <h3 className="font-bold text-lg mb-4 border-b pb-2 text-indigo-700">앱 설치 (PWA) 및 홈 화면 추가</h3>
+          <div className="p-4 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-3">
+            <p className="text-sm font-medium text-slate-800">
+              스마트폰 바탕화면에 앱 아이콘을 추가하여 주소창 없이 전체화면 앱으로 사용하실 수 있습니다.
+            </p>
+            <div className="text-xs text-slate-600 space-y-1.5 bg-white p-3 rounded border">
+              <p className="font-semibold text-indigo-600">📱 기기별 설치 방법 안내:</p>
+              <p>• <strong>안드로이드 크롬/삼성인터넷:</strong> 브라우저 우측 상단 메뉴(⋮ 또는 ≡)를 누른 뒤 <span className="text-indigo-600 font-bold">[앱 설치]</span> 또는 <span className="text-indigo-600 font-bold">[홈 화면에 추가]</span>를 선택하세요.</p>
+              <p>• <strong>아이폰 Safari:</strong> 하단 중앙의 공유 버튼(네모 위로 화살표 <span className="font-mono">📤</span>)을 누른 뒤 <span className="text-indigo-600 font-bold">[홈 화면에 추가]</span>를 누르시면 됩니다.</p>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );

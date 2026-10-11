@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { useAppData } from '@/lib/googleSheetsApi';
+import { useAppData, useOptimisticMutation } from '@/lib/googleSheetsApi';
 import { useDateStore, getDateRange } from '@/store/useDateStore';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, ComposedChart, Line } from 'recharts';
 import { parseISO, isSameDay, format } from 'date-fns';
 import { Transaction } from '@/types/finance';
+import { TransactionModal } from '@/components/TransactionModal';
+import { useModalBackHandler } from '@/lib/useModalBackHandler';
 
 type ModalFilter = {
   type: 'account' | 'date' | 'category';
@@ -18,6 +20,10 @@ export default function Dashboard() {
   const [modalFilter, setModalFilter] = useState<ModalFilter>(null);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+
+  useModalBackHandler(modalFilter !== null, () => setModalFilter(null));
+
+  const mutateTx = useOptimisticMutation<Transaction>('Transactions');
 
   if (isLoading) return <div className="p-8 text-center">데이터를 불러오는 중입니다...</div>;
   if (error || !data) return <div className="p-8 text-red-500">오류가 발생했습니다.</div>;
@@ -305,7 +311,14 @@ export default function Dashboard() {
                     <tr key={t.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => { setEditingTx(t); setIsTxModalOpen(true); }}>
                       <td className="p-3 text-slate-500">{t.date ? t.date.slice(5, 10) : ''}</td>
                       <td className="p-3">{t.subCategory || '기타'}</td>
-                      <td className="p-3 text-slate-800">{t.merchant || t.memo}</td>
+                      <td className="p-3 text-slate-800">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{t.merchant || t.memo || '내역 없음'}</span>
+                          {t.memo && t.merchant && t.memo !== t.merchant && (
+                            <span className="text-xs text-slate-400 mt-0.5">메모: {t.memo}</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3 text-right font-bold text-red-600">{Number(t.amount).toLocaleString()}원</td>
                     </tr>
                   ))}
@@ -319,9 +332,14 @@ export default function Dashboard() {
               <div className="md:hidden flex flex-col">
                 {filteredModalTxs.map(t => (
                   <div key={t.id} className="border-b p-3 bg-white active:bg-slate-50 cursor-pointer" onClick={() => { setEditingTx(t); setIsTxModalOpen(true); }}>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-slate-900 truncate max-w-[200px]">{t.merchant || t.memo || '내역 없음'}</span>
-                      <span className="font-bold text-red-600">{Number(t.amount).toLocaleString()}원</span>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex flex-col max-w-[200px]">
+                        <span className="font-bold text-slate-900 truncate">{t.merchant || t.memo || '내역 없음'}</span>
+                        {t.memo && t.merchant && t.memo !== t.merchant && (
+                          <span className="text-xs text-slate-500 truncate mt-0.5">메모: {t.memo}</span>
+                        )}
+                      </div>
+                      <span className="font-bold text-red-600 shrink-0">{Number(t.amount).toLocaleString()}원</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] text-slate-500">
                       <span>{t.date ? t.date.slice(5, 10) : ''} &middot; {t.subCategory || '기타'}</span>
@@ -338,6 +356,27 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Transaction Detail & Edit Modal */}
+      <TransactionModal 
+        isOpen={isTxModalOpen} 
+        onClose={() => setIsTxModalOpen(false)} 
+        onSave={(txData) => {
+          if (editingTx) {
+            mutateTx.mutate({ action: 'UPDATE', data: { ...editingTx, ...txData } });
+          } else {
+            mutateTx.mutate({ action: 'CREATE', data: { ...txData, id: 'T' + Date.now() } as Transaction });
+          }
+          setIsTxModalOpen(false);
+        }} 
+        initialData={editingTx}
+        accounts={accounts}
+        categories={data?.Categories || []}
+        onDelete={(id) => {
+          mutateTx.mutate({ action: 'DELETE', data: { id } });
+          setIsTxModalOpen(false);
+        }}
+      />
     </div>
   );
 }
