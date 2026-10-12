@@ -54,6 +54,7 @@ export default function Dashboard() {
   
   const expenseRatio = totalIncome > 0 ? ((totalExpense / totalIncome) * 100).toFixed(1) : 0;
   const savingsRatio = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : 0;
+  const netBalance = totalIncome - totalExpense - totalSavings;
 
   const calendarDays: Date[] = [];
   let curD = new Date(startDate);
@@ -158,18 +159,26 @@ export default function Dashboard() {
       </div>
 
       {/* 3. 핵심 KPI 카드 */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4 whitespace-nowrap">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 whitespace-nowrap">
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm whitespace-nowrap">
           <p className="text-[10px] md:text-sm text-slate-500 mb-1">총 수입</p>
-          <h2 className="font-bold text-blue-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalIncome.toLocaleString()}원</h2>
+          <h2 className="font-bold text-blue-600 whitespace-nowrap tracking-tighter truncate text-sm md:text-2xl">{totalIncome.toLocaleString()}원</h2>
         </div>
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm whitespace-nowrap">
-          <p className="text-[10px] md:text-sm text-slate-500 mb-1">총 지출 <span className="hidden md:inline">(수입대비 {expenseRatio}%)</span></p>
-          <h2 className="font-bold text-red-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalExpense.toLocaleString()}원</h2>
+          <p className="text-[10px] md:text-sm text-slate-500 mb-1">총 지출 <span className="hidden md:inline">({expenseRatio}%)</span></p>
+          <h2 className="font-bold text-red-600 whitespace-nowrap tracking-tighter truncate text-sm md:text-2xl">{totalExpense.toLocaleString()}원</h2>
         </div>
         <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm whitespace-nowrap">
-          <p className="text-[10px] md:text-sm text-slate-500 mb-1">저축/투자 <span className="hidden md:inline">(수입대비 {savingsRatio}%)</span></p>
-          <h2 className="font-bold text-emerald-600 whitespace-nowrap tracking-tighter truncate text-xs md:text-2xl">{totalSavings.toLocaleString()}원</h2>
+          <p className="text-[10px] md:text-sm text-slate-500 mb-1">저축/투자 <span className="hidden md:inline">({savingsRatio}%)</span></p>
+          <h2 className="font-bold text-emerald-600 whitespace-nowrap tracking-tighter truncate text-sm md:text-2xl">{totalSavings.toLocaleString()}원</h2>
+        </div>
+        <div className="bg-white p-3 md:p-6 rounded-xl border shadow-sm whitespace-nowrap bg-gradient-to-br from-white to-indigo-50/30">
+          <p className="text-[10px] md:text-sm text-slate-500 mb-1">
+            {viewMode === 'yearly' ? '연간' : '이번 달'} 남은 돈 <span className="text-[10px] text-slate-400 hidden sm:inline">(순잔액)</span>
+          </p>
+          <h2 className={`font-bold whitespace-nowrap tracking-tighter truncate text-sm md:text-2xl ${netBalance >= 0 ? 'text-indigo-600' : 'text-amber-600'}`}>
+            {netBalance >= 0 ? `+${netBalance.toLocaleString()}원` : `${netBalance.toLocaleString()}원`}
+          </h2>
         </div>
       </div>
 

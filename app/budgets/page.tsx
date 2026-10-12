@@ -128,6 +128,14 @@ export default function Budgets() {
     return d >= startDate && d <= endDate;
   });
 
+  const totalTarget = budgets.reduce((a, b) => a + Number(b.targetAmount), 0);
+  const totalSpent = budgets.reduce((a, b) => {
+    const cat = categories.find(c => c.id === b.categoryId);
+    const spent = monthlyTxs.filter(t => t.subCategory === (cat?.subCategory || b.categoryId)).reduce((sum, tx) => sum + Number(tx.amount), 0);
+    return a + spent;
+  }, 0);
+  const totalRemaining = totalTarget - totalSpent;
+
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 pb-24">
       
@@ -205,34 +213,67 @@ export default function Budgets() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {budgets.map(b => {
-              const cat = categories.find(c => c.id === b.categoryId);
-              const spent = monthlyTxs.filter(t => t.subCategory === (cat?.subCategory || b.categoryId)).reduce((a,tx) => a+Number(tx.amount), 0);
-              const target = Number(b.targetAmount);
-              const ratio = target > 0 ? (spent / target) * 100 : 0;
-              const warningThreshold = Number(b.warningThreshold || 80);
-              const isWarning = ratio >= warningThreshold;
-              const bId = (b as any).id || b.categoryId;
-              
-              return (
-                <div key={bId} className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-end mb-3">
-                    <div>
-                      <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
-                      <div className="flex items-center gap-2 mt-1 whitespace-nowrap">
-                        <h3 className="font-bold text-base md:text-lg">{cat?.subCategory || b.categoryId}</h3>
-                        <button onClick={() => handleOpenModal(b)} className="text-blue-400 text-xs hover:text-blue-600 border border-blue-200 px-2 py-0.5 rounded">수정</button>
-                        <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600 border border-red-200 px-2 py-0.5 rounded">삭제</button>
+          <div className="space-y-4">
+            {/* 전체 예산 한도 요약 배너 */}
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 md:p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <p className="text-xs text-indigo-200 font-medium mb-1">이번 달 총 예산 한도 대비 잔여액</p>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-xl md:text-3xl font-extrabold tracking-tight">
+                    {totalRemaining >= 0 ? `${totalRemaining.toLocaleString()}원 남음` : `${Math.abs(totalRemaining).toLocaleString()}원 초과!`}
+                  </span>
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${totalRemaining >= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
+                    {totalTarget > 0 ? `${((totalSpent / totalTarget) * 100).toFixed(1)}% 사용` : '0%'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-5 md:gap-6 text-xs md:text-sm text-slate-300 border-t md:border-t-0 md:border-l border-white/10 pt-3 md:pt-0 md:pl-6 w-full md:w-auto justify-between md:justify-end">
+                <div>
+                  <p className="text-[11px] text-slate-400">총 목표 예산</p>
+                  <p className="font-bold text-white text-sm md:text-base">{totalTarget.toLocaleString()}원</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-slate-400">사용한 금액</p>
+                  <p className="font-bold text-red-300 text-sm md:text-base">{totalSpent.toLocaleString()}원</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 개별 카테고리 예산 그리드 */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {budgets.map(b => {
+                const cat = categories.find(c => c.id === b.categoryId);
+                const spent = monthlyTxs.filter(t => t.subCategory === (cat?.subCategory || b.categoryId)).reduce((a,tx) => a+Number(tx.amount), 0);
+                const target = Number(b.targetAmount);
+                const remaining = target - spent;
+                const ratio = target > 0 ? (spent / target) * 100 : 0;
+                const warningThreshold = Number(b.warningThreshold || 80);
+                const isWarning = ratio >= warningThreshold;
+                const bId = (b as any).id || b.categoryId;
+                
+                return (
+                  <div key={bId} className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-end mb-3">
+                      <div>
+                        <span className="text-sm text-slate-500">{cat?.mainCategory || '지출'}</span>
+                        <div className="flex items-center gap-2 mt-1 whitespace-nowrap">
+                          <h3 className="font-bold text-base md:text-lg">{cat?.subCategory || b.categoryId}</h3>
+                          <button onClick={() => handleOpenModal(b)} className="text-blue-400 text-xs hover:text-blue-600 border border-blue-200 px-2 py-0.5 rounded">수정</button>
+                          <button onClick={() => handleDeleteBudget(bId)} className="text-red-400 text-xs hover:text-red-600 border border-red-200 px-2 py-0.5 rounded">삭제</button>
+                        </div>
+                      </div>
+                      <div className="text-right whitespace-nowrap">
+                        <span className={`text-base md:text-lg font-bold ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
+                          {spent.toLocaleString()}원
+                        </span>
+                        <span className="text-sm text-slate-400"> / {target.toLocaleString()}원</span>
+                        <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                          잔여: <span className={remaining >= 0 ? 'text-indigo-600 font-bold' : 'text-red-600 font-bold'}>
+                            {remaining >= 0 ? `${remaining.toLocaleString()}원 남음` : `${Math.abs(remaining).toLocaleString()}원 초과`}
+                          </span>
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right whitespace-nowrap">
-                      <span className={`text-base md:text-lg font-bold ${isWarning ? 'text-red-600' : 'text-slate-700'}`}>
-                        {spent.toLocaleString()}원
-                      </span>
-                      <span className="text-sm text-slate-400"> / {target.toLocaleString()}원</span>
-                    </div>
-                  </div>
                   
                   <div className="w-full bg-slate-100 rounded-full h-4 overflow-hidden shadow-inner">
                     <div className={`h-full transition-all duration-500 ${ratio >= 100 ? 'bg-red-600' : isWarning ? 'bg-orange-500' : 'bg-blue-500'}`} 
@@ -248,6 +289,7 @@ export default function Budgets() {
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </section>
