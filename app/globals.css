@@ -3,19 +3,321 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --card: #ffffff;
-    --card-foreground: #0f172a;
+  :root,
+  [data-theme="slate"] {
+    --theme-bg: #f8fafc;
+    --theme-card: #ffffff;
+    --theme-card-subtle: #f1f5f9;
+    --theme-border: #e2e8f0;
+    --theme-text-main: #0f172a;
+    --theme-text-muted: #64748b;
+    --theme-primary: #2563eb;
+    --theme-primary-hover: #1d4ed8;
+    --theme-primary-light: #eff6ff;
+    --theme-primary-text: #1d4ed8;
+    --theme-nav-bg: #ffffff;
+    --theme-nav-border: #e2e8f0;
+    --theme-input-bg: #ffffff;
+  }
+
+  [data-theme="midnight"] {
+    --theme-bg: #090d16;
+    --theme-card: #131b2e;
+    --theme-card-subtle: #1c263d;
+    --theme-border: #22304d;
+    --theme-text-main: #f8fafc;
+    --theme-text-muted: #94a3b8;
+    --theme-primary: #38bdf8;
+    --theme-primary-hover: #0ea5e9;
+    --theme-primary-light: #0d233a;
+    --theme-primary-text: #38bdf8;
+    --theme-nav-bg: #0f1726;
+    --theme-nav-border: #1e293b;
+    --theme-input-bg: #1c263d;
+  }
+
+  [data-theme="sage"] {
+    --theme-bg: #f2f6f3;
+    --theme-card: #ffffff;
+    --theme-card-subtle: #e8f1ea;
+    --theme-border: #d8e6da;
+    --theme-text-main: #132617;
+    --theme-text-muted: #4d6552;
+    --theme-primary: #16a34a;
+    --theme-primary-hover: #15803d;
+    --theme-primary-light: #f0fdf4;
+    --theme-primary-text: #15803d;
+    --theme-nav-bg: #ffffff;
+    --theme-nav-border: #d8e6da;
+    --theme-input-bg: #ffffff;
+  }
+
+  [data-theme="rose"] {
+    --theme-bg: #fff5f6;
+    --theme-card: #ffffff;
+    --theme-card-subtle: #fdeced;
+    --theme-border: #fed5da;
+    --theme-text-main: #2d1217;
+    --theme-text-muted: #7a4850;
+    --theme-primary: #e11d48;
+    --theme-primary-hover: #be123c;
+    --theme-primary-light: #fff1f2;
+    --theme-primary-text: #be123c;
+    --theme-nav-bg: #ffffff;
+    --theme-nav-border: #fed5da;
+    --theme-input-bg: #ffffff;
+  }
+
+  [data-theme="luxury"] {
+    --theme-bg: #0d0e12;
+    --theme-card: #17181e;
+    --theme-card-subtle: #22242c;
+    --theme-border: #2d2f3a;
+    --theme-text-main: #fdfbf7;
+    --theme-text-muted: #a1a1aa;
+    --theme-primary: #d97706;
+    --theme-primary-hover: #b45309;
+    --theme-primary-light: #2e2311;
+    --theme-primary-text: #fbbf24;
+    --theme-nav-bg: #131418;
+    --theme-nav-border: #2d2f3a;
+    --theme-input-bg: #22242c;
+  }
+
+  [data-theme="lavender"] {
+    --theme-bg: #f7f5fc;
+    --theme-card: #ffffff;
+    --theme-card-subtle: #f2ecfb;
+    --theme-border: #ebdcf9;
+    --theme-text-main: #1e1130;
+    --theme-text-muted: #604e78;
+    --theme-primary: #7c3aed;
+    --theme-primary-hover: #6d28d9;
+    --theme-primary-light: #faf5ff;
+    --theme-primary-text: #6d28d9;
+    --theme-nav-bg: #ffffff;
+    --theme-nav-border: #ebdcf9;
+    --theme-input-bg: #ffffff;
   }
 }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
+  background-color: var(--theme-bg);
+  color: var(--theme-text-main);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+body {
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-text-main) !important;
+}
 
+/* Dark mode native support */
+[data-theme="midnight"],
+[data-theme="luxury"] {
+  color-scheme: dark;
+}
 
+/* Card surfaces for dark themes */
+[data-theme="midnight"] .bg-white,
+[data-theme="luxury"] .bg-white {
+  background-color: var(--theme-card) !important;
+  color: var(--theme-text-main) !important;
+}
 
+/* Secondary & subtle backgrounds for dark themes */
+[data-theme="midnight"] .bg-slate-50,
+[data-theme="luxury"] .bg-slate-50,
+[data-theme="midnight"] .bg-slate-100,
+[data-theme="luxury"] .bg-slate-100,
+[data-theme="midnight"] .bg-slate-200,
+[data-theme="luxury"] .bg-slate-200,
+[data-theme="midnight"] .bg-gray-50,
+[data-theme="luxury"] .bg-gray-50,
+[data-theme="midnight"] .bg-gray-100,
+[data-theme="luxury"] .bg-gray-100 {
+  background-color: var(--theme-card-subtle) !important;
+  color: var(--theme-text-main) !important;
+}
 
+/* Light themes subtle backgrounds */
+[data-theme="sage"] .bg-slate-50,
+[data-theme="sage"] .bg-slate-100 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="rose"] .bg-slate-50,
+[data-theme="rose"] .bg-slate-100 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="lavender"] .bg-slate-50,
+[data-theme="lavender"] .bg-slate-100 {
+  background-color: var(--theme-card-subtle) !important;
+}
+
+/* Sidebar and Mobile navigation */
+[data-theme="midnight"] aside,
+[data-theme="luxury"] aside,
+[data-theme="midnight"] nav,
+[data-theme="luxury"] nav {
+  background-color: var(--theme-nav-bg) !important;
+  border-color: var(--theme-nav-border) !important;
+}
+
+/* Borders in dark themes */
+[data-theme="midnight"] .border,
+[data-theme="luxury"] .border,
+[data-theme="midnight"] .border-t,
+[data-theme="luxury"] .border-t,
+[data-theme="midnight"] .border-b,
+[data-theme="luxury"] .border-b,
+[data-theme="midnight"] .border-r,
+[data-theme="luxury"] .border-r,
+[data-theme="midnight"] .border-l,
+[data-theme="luxury"] .border-l,
+[data-theme="midnight"] .border-slate-200,
+[data-theme="luxury"] .border-slate-200,
+[data-theme="midnight"] .border-slate-100,
+[data-theme="luxury"] .border-slate-100 {
+  border-color: var(--theme-border) !important;
+}
+
+/* Text colors in dark themes */
+[data-theme="midnight"] .text-slate-900,
+[data-theme="luxury"] .text-slate-900,
+[data-theme="midnight"] .text-slate-800,
+[data-theme="luxury"] .text-slate-800,
+[data-theme="midnight"] .text-slate-700,
+[data-theme="luxury"] .text-slate-700,
+[data-theme="midnight"] .text-gray-900,
+[data-theme="luxury"] .text-gray-900,
+[data-theme="midnight"] .text-gray-800,
+[data-theme="luxury"] .text-gray-800 {
+  color: var(--theme-text-main) !important;
+}
+
+[data-theme="midnight"] .text-slate-600,
+[data-theme="luxury"] .text-slate-600,
+[data-theme="midnight"] .text-slate-500,
+[data-theme="luxury"] .text-slate-500,
+[data-theme="midnight"] .text-gray-600,
+[data-theme="luxury"] .text-gray-600,
+[data-theme="midnight"] .text-gray-500,
+[data-theme="luxury"] .text-gray-500 {
+  color: var(--theme-text-muted) !important;
+}
+
+/* Hover overrides for dark themes */
+[data-theme="midnight"] .hover\:bg-slate-50:hover,
+[data-theme="luxury"] .hover\:bg-slate-50:hover,
+[data-theme="midnight"] .hover\:bg-slate-100:hover,
+[data-theme="luxury"] .hover\:bg-slate-100:hover {
+  background-color: var(--theme-card-subtle) !important;
+}
+
+[data-theme="midnight"] .hover\:text-slate-900:hover,
+[data-theme="luxury"] .hover\:text-slate-900:hover,
+[data-theme="midnight"] .hover\:text-black:hover,
+[data-theme="luxury"] .hover\:text-black:hover {
+  color: var(--theme-text-main) !important;
+}
+
+/* Inputs, selects, and textareas */
+[data-theme="midnight"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="luxury"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="midnight"] select,
+[data-theme="luxury"] select,
+[data-theme="midnight"] textarea,
+[data-theme="luxury"] textarea {
+  background-color: var(--theme-input-bg) !important;
+  color: var(--theme-text-main) !important;
+  border-color: var(--theme-border) !important;
+}
+
+/* Tables in dark themes */
+[data-theme="midnight"] th,
+[data-theme="luxury"] th {
+  background-color: var(--theme-card-subtle) !important;
+  color: var(--theme-text-main) !important;
+  border-color: var(--theme-border) !important;
+}
+
+[data-theme="midnight"] td,
+[data-theme="luxury"] td {
+  border-color: var(--theme-border) !important;
+}
+
+/* Primary color overrides across custom themes */
+[data-theme="midnight"] .bg-blue-600,
+[data-theme="midnight"] .bg-blue-700,
+[data-theme="midnight"] .hover\:bg-blue-700:hover {
+  background-color: var(--theme-primary) !important;
+  color: #090d16 !important;
+}
+
+[data-theme="luxury"] .bg-blue-600,
+[data-theme="luxury"] .bg-blue-700,
+[data-theme="luxury"] .hover\:bg-blue-700:hover {
+  background-color: var(--theme-primary) !important;
+  color: #0e0f12 !important;
+}
+
+[data-theme="sage"] .bg-blue-600,
+[data-theme="sage"] .bg-blue-700,
+[data-theme="sage"] .hover\:bg-blue-700:hover,
+[data-theme="rose"] .bg-blue-600,
+[data-theme="rose"] .bg-blue-700,
+[data-theme="rose"] .hover\:bg-blue-700:hover,
+[data-theme="lavender"] .bg-blue-600,
+[data-theme="lavender"] .bg-blue-700,
+[data-theme="lavender"] .hover\:bg-blue-700:hover {
+  background-color: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Light tint & text primary overrides */
+[data-theme="midnight"] .bg-blue-50,
+[data-theme="midnight"] .bg-blue-50\/50,
+[data-theme="luxury"] .bg-blue-50,
+[data-theme="luxury"] .bg-blue-50\/50,
+[data-theme="sage"] .bg-blue-50,
+[data-theme="sage"] .bg-blue-50\/50,
+[data-theme="rose"] .bg-blue-50,
+[data-theme="rose"] .bg-blue-50\/50,
+[data-theme="lavender"] .bg-blue-50,
+[data-theme="lavender"] .bg-blue-50\/50 {
+  background-color: var(--theme-primary-light) !important;
+}
+
+[data-theme="midnight"] .text-blue-600,
+[data-theme="midnight"] .text-blue-700,
+[data-theme="luxury"] .text-blue-600,
+[data-theme="luxury"] .text-blue-700,
+[data-theme="sage"] .text-blue-600,
+[data-theme="sage"] .text-blue-700,
+[data-theme="rose"] .text-blue-600,
+[data-theme="rose"] .text-blue-700,
+[data-theme="lavender"] .text-blue-600,
+[data-theme="lavender"] .text-blue-700 {
+  color: var(--theme-primary-text) !important;
+}
+
+[data-theme="midnight"] .border-blue-600,
+[data-theme="luxury"] .border-blue-600,
+[data-theme="sage"] .border-blue-600,
+[data-theme="rose"] .border-blue-600,
+[data-theme="lavender"] .border-blue-600 {
+  border-color: var(--theme-primary) !important;
+}
+
+/* Recharts Tooltips in dark themes */
+[data-theme="midnight"] .recharts-default-tooltip,
+[data-theme="luxury"] .recharts-default-tooltip {
+  background-color: var(--theme-card) !important;
+  border-color: var(--theme-border) !important;
+  color: var(--theme-text-main) !important;
+}
+[data-theme="midnight"] .recharts-cartesian-axis-tick text,
+[data-theme="luxury"] .recharts-cartesian-axis-tick text {
+  fill: var(--theme-text-muted) !important;
+}

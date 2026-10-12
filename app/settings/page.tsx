@@ -1,10 +1,13 @@
 'use client';
 import { useDateStore } from '@/store/useDateStore';
 import { useAppData } from '@/lib/googleSheetsApi';
+import { useThemeStore, THEMES } from '@/store/useThemeStore';
 import { useState } from 'react';
+import { Palette, Check } from 'lucide-react';
 
 export default function Settings() {
   const { baseDay, periodType, setBaseDay, setPeriodType } = useDateStore();
+  const { theme, setTheme } = useThemeStore();
   const { data, isLoading } = useAppData();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -63,6 +66,97 @@ export default function Settings() {
       
       <div className="bg-white p-6 rounded-xl border shadow-sm space-y-8">
         
+        {/* 화면 테마 설정 영역 */}
+        <section>
+          <div className="flex items-center justify-between border-b pb-2 mb-3">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <Palette className="w-5 h-5 text-blue-600" />
+              화면 테마 설정
+            </h3>
+            <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+              현재: {THEMES.find(t => t.id === theme)?.name}
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 mb-4">
+            가계부 앱의 분위기와 색상을 기분에 맞게 변경해보세요. 선택 즉시 모든 화면에 실시간 적용됩니다.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {THEMES.map((item) => {
+              const isSelected = theme === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setTheme(item.id)}
+                  className={`text-left p-3.5 rounded-xl border-2 transition-all relative flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md ${
+                    isSelected 
+                      ? 'border-blue-600 ring-2 ring-blue-500/20' 
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                  style={{
+                    backgroundColor: item.previewBg,
+                    color: item.previewText,
+                  }}
+                >
+                  {/* 상단 뱃지 & 선택 표시 */}
+                  <div className="w-full flex items-center justify-between mb-3">
+                    <span 
+                      className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: item.previewAccent,
+                        color: item.previewPrimary,
+                        border: `1px solid ${item.isDark ? '#334155' : item.previewPrimary}30`
+                      }}
+                    >
+                      {item.tag}
+                    </span>
+                    {isSelected ? (
+                      <span className="flex items-center gap-1 text-xs font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in-75">
+                        <Check size={12} strokeWidth={3} />
+                        적용중
+                      </span>
+                    ) : (
+                      <span className="text-[11px] opacity-60">클릭하여 선택</span>
+                    )}
+                  </div>
+
+                  {/* UI 미니어처 미리보기 박스 */}
+                  <div 
+                    className="w-full rounded-lg p-2.5 mb-3 border shadow-xs flex flex-col gap-1.5"
+                    style={{
+                      backgroundColor: item.previewCard,
+                      borderColor: item.isDark ? '#2d3748' : '#e2e8f0',
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-2 rounded-full opacity-70" style={{ backgroundColor: item.previewText }} />
+                      <div className="w-6 h-3 rounded-full text-[9px] flex items-center justify-center font-bold text-white" style={{ backgroundColor: item.previewPrimary }}>
+                        ₩
+                      </div>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: item.previewAccent }} />
+                    <div className="flex gap-1 mt-0.5">
+                      <div className="flex-1 h-3 rounded" style={{ backgroundColor: item.previewPrimary, opacity: 0.85 }} />
+                      <div className="flex-1 h-3 rounded" style={{ backgroundColor: item.previewAccent }} />
+                    </div>
+                  </div>
+
+                  {/* 테마 이름 및 설명 */}
+                  <div>
+                    <h4 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+                      {item.name}
+                    </h4>
+                    <p className="text-[11px] mt-1 opacity-75 line-clamp-2 leading-relaxed">
+                      {item.concept}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* 설정기준 설정 영역 */}
         <section>
           <h3 className="font-bold text-lg mb-4 border-b pb-2 flex items-center gap-2">

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Sidebar } from '@/components/Sidebar';
 import Providers from './providers';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 import { GlobalFab } from '@/components/GlobalFab';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
@@ -46,6 +47,15 @@ export default function RootLayout({
       </head>
       <body className="bg-slate-50 text-slate-900 antialiased">
         <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var storedTheme = localStorage.getItem('pfm-theme-storage');
+            if (storedTheme) {
+              var parsed = JSON.parse(storedTheme);
+              if (parsed && parsed.state && parsed.state.theme) {
+                document.documentElement.setAttribute('data-theme', parsed.state.theme);
+              }
+            }
+          } catch(e) {}
           if (typeof window !== "undefined" && "serviceWorker" in navigator) {
             window.addEventListener("load", function() {
               var isCalc = window.location.pathname.indexOf("/calculator") !== -1;
@@ -60,14 +70,16 @@ export default function RootLayout({
           }
         ` }} />
         <Providers>
-          <PwaInstallPrompt />
-          <Sidebar />
-          <main className="md:pl-64 pb-16 md:pb-0 min-h-screen">
-            <div className="max-w-6xl mx-auto p-4 md:p-8">
-              {children}
-            </div>
-          </main>
-          <GlobalFab />
+          <ThemeProvider>
+            <PwaInstallPrompt />
+            <Sidebar />
+            <main className="md:pl-64 pb-16 md:pb-0 min-h-screen">
+              <div className="max-w-6xl mx-auto p-4 md:p-8">
+                {children}
+              </div>
+            </main>
+            <GlobalFab />
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

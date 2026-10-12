@@ -15,11 +15,31 @@ interface AppData {
 }
 
 export async function fetchAllData(): Promise<AppData> {
-  const response = await fetch(GAS_URL, {
-    method: 'GET'
-  });
-  const result = await response.json();
-  if (result.success === false) throw new Error(result.error);
+  let result: any;
+  try {
+    const response = await fetch(GAS_URL, {
+      method: 'GET'
+    });
+    result = await response.json();
+  } catch (err) {
+    console.warn('GET fetch failed, trying POST:', err);
+  }
+
+  // If GET returned message instead of data, fallback to POST
+  if (!result || result.success === false || result.message || (!result.data && !result.Transactions)) {
+    try {
+      const postRes = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'READ_ALL' })
+      });
+      result = await postRes.json();
+    } catch (postErr) {
+      console.error('POST fetch failed:', postErr);
+    }
+  }
+
+  if (!result || result.success === false) throw new Error(result?.error || '데이터를 불러오지 못했습니다.');
   const data = (result.data ? result.data : result) as AppData;
   
   // Sanitization: Remove transactions with invalid dates to prevent crashing
