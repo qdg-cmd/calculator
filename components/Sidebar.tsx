@@ -44,18 +44,21 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t flex items-center h-16 z-50 px-2 pb-safe overflow-x-auto gap-4" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        {navItems.filter(i => ["/dashboard", "/transactions", "/budgets", "/settings"].includes(i.href)).map((item) => {
+      <nav 
+        className="md:hidden fixed bottom-0 w-full bg-white border-t flex items-center h-16 z-50 px-2 pb-safe overflow-x-auto gap-2 shadow-lg" 
+        style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full space-y-1",
+                "flex flex-col items-center justify-center flex-shrink-0 min-w-[62px] px-1 h-full space-y-1 transition-colors",
                 isActive ? "text-blue-700 font-bold border-t-[3px] border-blue-600 bg-blue-50/50 -mt-[1px]" : "text-slate-500 hover:text-slate-900 border-t-[3px] border-transparent -mt-[1px]"
               )}>
               <Icon size={20} />
-              <span className="text-[10px] font-medium">{item.name}</span>
+              <span className="text-[10px] font-medium whitespace-nowrap">{item.name}</span>
             </Link>
           );
         })}
